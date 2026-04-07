@@ -1,0 +1,1400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Citation Defender</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0c0e1a;
+    --bg-raised: #12152a;
+    --bg-card: #161937;
+    --bg-card-hover: #1c2045;
+    --border: #252a4a;
+    --border-subtle: #1e2240;
+    --text: #d8dae6;
+    --text-dim: #8b90b4;
+    --text-bright: #f0f1f7;
+    --serif: 'Cormorant Garamond', 'Georgia', serif;
+    --mono: 'JetBrains Mono', 'Menlo', monospace;
+    --gold: #e2b714;
+    --blue: #60a5fa;
+    --green: #4ade80;
+    --red: #e94560;
+    --amber: #f59e0b;
+    --yellow: #fbbf24;
+    --red-glow: rgba(233, 69, 96, 0.12);
+    --green-glow: rgba(74, 222, 128, 0.10);
+    --yellow-glow: rgba(251, 191, 36, 0.10);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: var(--serif);
+    font-size: 16px;
+    font-weight: 400;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    min-height: 100vh;
+    overflow: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      linear-gradient(rgba(37, 42, 74, 0.12) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(37, 42, 74, 0.12) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── PROGRESS BAR ─────────────────────── */
+  #progress-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: var(--border-subtle);
+    z-index: 100;
+  }
+  #progress-bar .fill {
+    height: 100%;
+    background: var(--gold);
+    transition: width 0.4s ease;
+    width: 0%;
+  }
+
+  /* ── NAVIGATION ───────────────────────── */
+  #presenter-nav {
+    position: fixed;
+    bottom: 32px;
+    right: 32px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    z-index: 100;
+    font-family: var(--mono);
+    font-size: 12px;
+  }
+  #presenter-nav button {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: var(--mono);
+    font-size: 12px;
+    transition: all 0.2s;
+  }
+  #presenter-nav button:hover {
+    background: var(--bg-card-hover);
+    border-color: var(--gold);
+    color: var(--text-bright);
+  }
+  #step-indicator {
+    color: var(--text-dim);
+    min-width: 48px;
+    text-align: center;
+  }
+
+  /* ── ACTS ──────────────────────────────── */
+  .act {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 48px 32px 80px;
+    z-index: 1;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease;
+    overflow-y: auto;
+  }
+  /* Vertical centering spacer — pushes content down when it fits, collapses when it doesn't */
+  .act::before {
+    content: '';
+    flex: 1 1 0;
+    min-height: 16px;
+  }
+  .act::after {
+    content: '';
+    flex: 1 1 0;
+    min-height: 16px;
+  }
+  .act.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .act-label {
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+  }
+  .act h1 {
+    font-family: var(--serif);
+    font-size: clamp(32px, 5vw, 56px);
+    font-weight: 700;
+    color: var(--text-bright);
+    line-height: 1.1;
+    margin-bottom: 32px;
+    text-align: center;
+  }
+
+  /* ── STEP VISIBILITY ──────────────────── */
+  .step {
+    opacity: 0;
+    transform: translateY(16px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+    max-width: 900px;
+    width: 100%;
+  }
+  .step.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* ── CASE CARD (Act 1) ────────────────── */
+  .case-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 40px 48px;
+    text-align: center;
+    margin-bottom: 32px;
+  }
+  .case-card .vs {
+    font-family: var(--serif);
+    font-size: 14px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+  }
+  .case-card .case-name {
+    font-family: var(--serif);
+    font-size: clamp(24px, 3vw, 36px);
+    font-weight: 600;
+    font-style: italic;
+    color: var(--text-bright);
+    line-height: 1.3;
+    margin-bottom: 16px;
+  }
+  .case-card .amount {
+    font-family: var(--mono);
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--gold);
+    margin-bottom: 12px;
+  }
+  .case-card .description {
+    color: var(--text);
+    font-size: 16px;
+    max-width: 640px;
+    margin: 0 auto;
+  }
+
+  /* ── LLM PARAGRAPH (Act 1) ────────────── */
+  .llm-output {
+    background: var(--bg-raised);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--text-dim);
+    border-radius: 4px;
+    padding: 28px 32px;
+    margin-bottom: 16px;
+    font-size: 16px;
+    line-height: 1.8;
+  }
+  .llm-output .label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 12px;
+  }
+  .cite-ref {
+    color: var(--blue);
+    border-bottom: 1px dotted var(--blue);
+    cursor: default;
+  }
+  .cite-ref.hallucinated { color: var(--red); border-color: var(--red); }
+  .cite-ref.caution { color: var(--yellow); border-color: var(--yellow); }
+  .footnotes {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text);
+    margin-top: 16px;
+    line-height: 1.9;
+  }
+
+  /* ── BASELINE CARDS (Act 2) ───────────── */
+  .baseline-row {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 24px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .baseline-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 20px 24px;
+    flex: 1;
+    min-width: 220px;
+    max-width: 280px;
+    text-align: center;
+  }
+  .baseline-card .cite-name {
+    font-family: var(--serif);
+    font-size: 14px;
+    font-style: italic;
+    color: var(--text);
+    margin-bottom: 12px;
+    min-height: 40px;
+  }
+  .badge {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    padding: 5px 14px;
+    border-radius: 3px;
+  }
+  .badge.red { background: var(--red-glow); color: var(--red); border: 1px solid var(--red); }
+  .badge.green { background: var(--green-glow); color: var(--green); border: 1px solid var(--green); }
+  .badge.yellow { background: var(--yellow-glow); color: var(--yellow); border: 1px solid var(--yellow); }
+
+  .callout {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--amber);
+    border-radius: 4px;
+    padding: 20px 28px;
+    font-size: 17px;
+    color: var(--text-bright);
+    text-align: center;
+  }
+
+  /* ── CITATION PANELS (Act 3) ──────────── */
+  .citation-panel {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 28px 32px;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .citation-panel::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+  }
+  .citation-panel.panel-red::before { background: var(--red); }
+  .citation-panel.panel-red { background: var(--red-glow); }
+  .citation-panel.panel-green::before { background: var(--green); }
+  .citation-panel.panel-yellow::before { background: var(--yellow); }
+  .citation-panel.panel-yellow { background: var(--yellow-glow); }
+
+  .citation-panel .cite-header {
+    font-family: var(--mono);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-bright);
+    margin-bottom: 20px;
+    padding-left: 12px;
+  }
+
+  .check-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 8px 0 8px 12px;
+    opacity: 0;
+    transform: translateX(-8px);
+    transition: opacity 0.4s ease, transform 0.4s ease;
+  }
+  .check-row.revealed { opacity: 1; transform: translateX(0); }
+  .check-row.dimmed { opacity: 0.35; }
+
+  .check-icon {
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    margin-top: 2px;
+  }
+  .check-icon.pass { background: rgba(74, 222, 128, 0.2); color: var(--green); }
+  .check-icon.fail { background: rgba(233, 69, 96, 0.2); color: var(--red); }
+  .check-icon.warn { background: rgba(251, 191, 36, 0.2); color: var(--yellow); }
+  .check-icon.na { background: rgba(107, 112, 148, 0.15); color: var(--text-dim); }
+
+  .check-label {
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text);
+    min-width: 140px;
+    margin-top: 3px;
+  }
+  .check-detail {
+    font-size: 16px;
+    color: var(--text-bright);
+    flex: 1;
+  }
+  .check-detail.fail-text { color: var(--red); font-weight: 600; }
+  .check-detail.warn-text { color: var(--yellow); font-weight: 600; }
+
+  .panel-status {
+    margin-top: 16px;
+    padding: 12px 12px 0;
+    border-top: 1px solid var(--border-subtle);
+    font-family: var(--mono);
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    opacity: 0;
+    transition: opacity 0.4s ease 0.2s;
+  }
+  .panel-status.revealed { opacity: 1; }
+  .panel-status.status-red { color: var(--red); }
+  .panel-status.status-green { color: var(--green); }
+  .panel-status.status-yellow { color: var(--yellow); }
+
+  .reid-quote {
+    margin-top: 16px;
+    padding: 16px 20px;
+    background: rgba(251, 191, 36, 0.06);
+    border: 1px solid rgba(251, 191, 36, 0.2);
+    border-radius: 4px;
+    font-style: italic;
+    font-size: 15px;
+    color: var(--text);
+    line-height: 1.7;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+  }
+  .reid-quote.revealed { opacity: 1; }
+  .reid-quote em { color: var(--yellow); font-style: italic; font-weight: 600; }
+
+  .impact-btn {
+    display: inline-block;
+    margin-top: 16px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--yellow);
+    border: 1px solid var(--yellow);
+    background: transparent;
+    padding: 8px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.4s ease, background 0.2s;
+  }
+  .impact-btn.revealed { opacity: 1; }
+  .impact-btn:hover { background: rgba(251, 191, 36, 0.1); }
+
+  /* ── CASE IMPACT DIAGRAM (Act 4) ──────── */
+  .diagram-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    margin-bottom: 32px;
+  }
+  .claim-level {
+    display: flex;
+    justify-content: center;
+    gap: 32px;
+    position: relative;
+  }
+  .claim-node {
+    background: var(--bg-card);
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 20px;
+    text-align: center;
+    min-width: 180px;
+    max-width: 240px;
+    font-size: 14px;
+    color: var(--text);
+    position: relative;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: all 0.5s ease;
+  }
+  .claim-node.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .claim-node .claim-label {
+    font-family: var(--serif);
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-bright);
+    margin-bottom: 4px;
+  }
+  .claim-node .claim-tag {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .claim-tag.established { color: var(--green); }
+  .claim-tag.your-position { color: var(--blue); }
+  .claim-tag.opposing { color: var(--amber); }
+  .claim-tag.verdict { color: var(--gold); }
+
+  /* Connector lines */
+  .connector {
+    width: 2px;
+    height: 24px;
+    background: var(--border);
+    margin: 0 auto;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  .connector.visible { opacity: 1; }
+  .connector-fork {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 0;
+    position: relative;
+    height: 24px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  .connector-fork.visible { opacity: 1; }
+  .connector-fork::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    height: 12px;
+    width: 2px;
+    background: var(--border);
+    left: 50%;
+  }
+  .connector-fork::after {
+    content: '';
+    position: absolute;
+    top: 12px;
+    height: 2px;
+    left: calc(50% - 120px);
+    width: 240px;
+    background: var(--border);
+  }
+  .fork-drops {
+    display: flex;
+    justify-content: center;
+    gap: 240px;
+    position: relative;
+  }
+  .fork-drop {
+    width: 2px;
+    height: 12px;
+    background: var(--border);
+  }
+
+  /* Cascade states */
+  .claim-node.hit-warning {
+    border-color: var(--yellow);
+    box-shadow: 0 0 20px rgba(251, 191, 36, 0.2);
+  }
+  .claim-node.hit-warning .claim-label { color: var(--yellow); }
+  .claim-node.contested {
+    border-color: var(--amber);
+    opacity: 0.5;
+  }
+  .claim-node.at-risk {
+    border-color: var(--red);
+    box-shadow: 0 0 20px rgba(233, 69, 96, 0.15);
+  }
+  .claim-node.at-risk .claim-label { color: var(--red); }
+  .cascade-badge {
+    position: absolute;
+    top: -12px;
+    right: -8px;
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    padding: 4px 10px;
+    border-radius: 3px;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    white-space: nowrap;
+  }
+  .cascade-badge.visible { opacity: 1; }
+  .cascade-badge.warning-badge { background: var(--yellow); color: #1a1a2e; }
+  .cascade-badge.risk-badge { background: var(--red); color: #fff; }
+
+  /* ── SEVERITY ASSESSMENT (Act 4) ──────── */
+  .severity-panel {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--red);
+    border-radius: 6px;
+    padding: 32px 36px;
+    max-width: 680px;
+    width: 100%;
+  }
+  .severity-panel h3 {
+    font-family: var(--serif);
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--red);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .severity-line {
+    opacity: 0;
+    transform: translateY(4px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    margin-bottom: 8px;
+    font-size: 17px;
+    line-height: 1.7;
+    color: var(--text-bright);
+  }
+  .severity-line.visible { opacity: 1; transform: translateY(0); }
+  .severity-line.risk-item {
+    padding-left: 20px;
+    color: var(--text);
+  }
+  .severity-line.risk-item::before {
+    content: '\2192';
+    margin-right: 8px;
+    color: var(--red);
+  }
+  .severity-summary {
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-subtle);
+    display: flex;
+    gap: 32px;
+  }
+  .severity-stat {
+    text-align: center;
+  }
+  .severity-stat .num {
+    font-family: var(--mono);
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--red);
+  }
+  .severity-stat .label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+  .recommendation {
+    margin-top: 20px;
+    padding: 16px 20px;
+    background: rgba(233, 69, 96, 0.06);
+    border: 1px solid rgba(233, 69, 96, 0.2);
+    border-radius: 4px;
+    font-size: 15px;
+    line-height: 1.7;
+  }
+  .recommendation strong {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--amber);
+  }
+
+  /* ── COMPARISON TABLE (Act 5) ─────────── */
+  .comparison-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 32px;
+  }
+  .comparison-table th,
+  .comparison-table td {
+    padding: 14px 20px;
+    text-align: center;
+    border-bottom: 1px solid var(--border-subtle);
+    font-size: 15px;
+  }
+  .comparison-table th {
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    background: var(--bg-raised);
+  }
+  .comparison-table th:last-child {
+    color: var(--gold);
+  }
+  .comparison-table td:first-child {
+    text-align: left;
+    font-family: var(--serif);
+    font-size: 15px;
+    color: var(--text-bright);
+    min-width: 220px;
+  }
+  .comparison-table .yes { color: var(--green); font-weight: 700; font-size: 18px; }
+  .comparison-table .no { color: var(--text-dim); font-size: 18px; }
+  .comparison-table .yes-highlight {
+    color: var(--green);
+    font-size: 18px;
+    font-weight: 700;
+    text-shadow: 0 0 12px rgba(74, 222, 128, 0.3);
+  }
+
+  .closing {
+    text-align: center;
+    padding: 40px 0;
+  }
+  .closing blockquote {
+    font-family: var(--serif);
+    font-size: clamp(22px, 3vw, 32px);
+    font-weight: 600;
+    font-style: italic;
+    color: var(--text-bright);
+    line-height: 1.5;
+    max-width: 720px;
+    margin: 0 auto 24px;
+  }
+  .closing .patent-note {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+
+  /* ── ANIMATIONS ───────────────────────── */
+  @keyframes pulse-yellow {
+    0%, 100% { box-shadow: 0 0 20px rgba(251, 191, 36, 0.2); }
+    50% { box-shadow: 0 0 36px rgba(251, 191, 36, 0.4); }
+  }
+  .pulse-warning { animation: pulse-yellow 1.5s ease infinite; }
+
+  @keyframes pulse-red {
+    0%, 100% { box-shadow: 0 0 16px rgba(233, 69, 96, 0.15); }
+    50% { box-shadow: 0 0 28px rgba(233, 69, 96, 0.3); }
+  }
+  .pulse-risk { animation: pulse-red 1.5s ease infinite; }
+  /* ── PASSWORD GATE ─────────────────────── */
+  #password-gate {
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 500;
+    padding: 32px;
+  }
+  #password-gate.hidden { display: none; }
+  #password-gate h1 {
+    font-family: var(--serif);
+    font-size: 42px;
+    font-weight: 700;
+    color: var(--text-bright);
+    margin-bottom: 8px;
+  }
+  #password-gate .subtitle {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 40px;
+  }
+  #password-gate .gate-form {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+  #password-gate input {
+    font-family: var(--mono);
+    font-size: 15px;
+    padding: 10px 20px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text-bright);
+    outline: none;
+    width: 240px;
+    transition: border-color 0.2s;
+  }
+  #password-gate input:focus {
+    border-color: var(--gold);
+  }
+  #password-gate input.shake {
+    animation: shake 0.4s ease;
+    border-color: var(--red);
+  }
+  #password-gate button {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 600;
+    padding: 10px 24px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  #password-gate button:hover {
+    border-color: var(--gold);
+    color: var(--text-bright);
+  }
+  #password-gate .gate-hint {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 16px;
+  }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-8px); }
+    50% { transform: translateX(8px); }
+    75% { transform: translateX(-4px); }
+  }
+
+  /* ── NOSCRIPT / FALLBACK ───────────────── */
+  noscript .fallback-msg {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 48px 32px;
+    text-align: center;
+    position: relative;
+    z-index: 200;
+  }
+  noscript .fallback-msg h1 {
+    font-family: 'Cormorant Garamond', 'Georgia', serif;
+    font-size: 36px;
+    font-weight: 700;
+    color: #f0f1f7;
+    margin-bottom: 24px;
+  }
+  noscript .fallback-msg p {
+    font-size: 18px;
+    color: #d8dae6;
+    max-width: 520px;
+    margin-bottom: 16px;
+    line-height: 1.7;
+  }
+  noscript .fallback-msg .hint {
+    font-family: 'JetBrains Mono', 'Menlo', monospace;
+    font-size: 13px;
+    color: #8b90b4;
+    margin-top: 12px;
+  }
+</style>
+</head>
+<body>
+
+<!-- Fallback for email clients, TextEdit, or JS-disabled browsers -->
+<noscript>
+  <div class="fallback-msg">
+    <h1>Citation Defender</h1>
+    <p>This interactive presentation requires a web browser to view.</p>
+    <p><strong>On Mac or PC:</strong> Save this file, then open it with Safari, Chrome, or Firefox.</p>
+    <p><strong>On iPhone or Android:</strong> Tap the file, then choose "Open in Browser" from the share menu.</p>
+    <div class="hint">Adversarial citation review for legal writing &middot; Patent pending</div>
+  </div>
+</noscript>
+
+<!-- Password Gate -->
+<div id="password-gate">
+  <h1>Citation Defender</h1>
+  <div class="subtitle">Confidential Preview</div>
+  <div class="gate-form">
+    <input type="password" id="gate-input" placeholder="Access code" autocomplete="off">
+    <button onclick="checkGate()">Enter</button>
+  </div>
+  <div class="gate-hint">Contact presenter for access</div>
+</div>
+
+<!-- Progress Bar -->
+<div id="progress-bar"><div class="fill" id="progress-fill"></div></div>
+
+<!-- Navigation -->
+<nav id="presenter-nav">
+  <button id="prev-btn" onclick="retreat()">&#8592; Back</button>
+  <span id="step-indicator"></span>
+  <button id="next-btn" onclick="advance()">Next &#8594;</button>
+</nav>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- ACT 1: THE PROBLEM                                  -->
+<!-- ═══════════════════════════════════════════════════ -->
+<section class="act" id="act-1">
+  <div class="step" data-step="0">
+    <div style="text-align:center; margin-bottom: 24px;">
+      <h1 style="margin-bottom: 16px;">A citation can be real, accurate,<br>and still damage your argument.</h1>
+      <p style="font-size: 19px; color: var(--text); max-width: 640px; margin: 0 auto 24px;">
+        Most AI citation tools only ask: <em style="color:var(--green)">does it exist?</em><br>
+        Citation Defender asks: <em style="color:var(--yellow)">will opposing counsel use it against you?</em>
+      </p>
+      <div style="font-family: var(--mono); font-size: 12px; letter-spacing: 1px; color: var(--text-dim); border: 1px solid var(--border); display: inline-block; padding: 6px 16px; border-radius: 3px;">
+        ADVERSARIAL CITATION REVIEW FOR LEGAL WRITING
+      </div>
+    </div>
+  </div>
+
+  <div class="step" data-step="1">
+    <div style="text-align:center; margin-bottom: 12px;">
+      <span class="act-label">Case Study</span>
+    </div>
+    <div class="case-card">
+      <div class="case-name">Acme Bakery, Inc. v. LogistCo Refrigerated, LLC</div>
+      <div class="amount">$850,000 at stake</div>
+      <div class="description">
+        Acme contracted with LogistCo for weekly refrigerated delivery to five event venues.
+        A truck failure during a July heatwave caused a 36-hour delay; the shipment spoiled.
+        Acme lost three of its five venue contracts. Acme sues for consequential damages.
+      </div>
+    </div>
+  </div>
+
+  <div class="step" data-step="2">
+    <div class="llm-output">
+      <div class="label">AI-Drafted Brief Paragraph</div>
+      <p>
+        Acme's consequential damages were clearly within the parties' reasonable contemplation
+        at the time of contract. The leading authority,
+        <span class="cite-ref caution">Koufos v. Czarnikow Ltd. [1969] 1 AC 350</span>
+        (The Heron II), establishes that damages are recoverable where the loss "was not unlikely"
+        to result from breach.
+        <span class="cite-ref">Victoria Laundry (Windsor) Ltd. v. Newman Industries Ltd. [1949] 2 KB 528</span>
+        further held that a carrier with knowledge of the plaintiff's business is chargeable with
+        foreseeing business losses. Most directly on point,
+        <span class="cite-ref hallucinated">Alpha Foods Distribution v. FreezeCorp Logistics,
+        421 F.Supp.3d 812 (S.D.N.Y. 2019)</span>, held that reputational damages flowing from
+        a single breach were foreseeable where the defendant knew of the plaintiff's downstream
+        client relationships.
+      </p>
+      <div class="footnotes">
+        [1] Alpha Foods Distribution v. FreezeCorp Logistics, 421 F.Supp.3d 812 (S.D.N.Y. 2019)<br>
+        [2] Victoria Laundry (Windsor) Ltd. v. Newman Industries Ltd. [1949] 2 KB 528<br>
+        [3] Koufos v. Czarnikow Ltd. (The Heron II) [1969] 1 AC 350
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- ACT 2: TRADITIONAL TOOLS                            -->
+<!-- ═══════════════════════════════════════════════════ -->
+<section class="act" id="act-2">
+  <div class="step" data-step="3">
+    <div style="text-align:center; margin-bottom: 12px;">
+      <span class="act-label">What Existing Tools Catch</span>
+    </div>
+    <div class="baseline-row">
+      <div class="baseline-card">
+        <div class="cite-name">Alpha Foods v. FreezeCorp</div>
+        <span class="badge red">NOT FOUND</span>
+      </div>
+      <div class="baseline-card">
+        <div class="cite-name">Victoria Laundry v. Newman</div>
+        <span class="badge green">EXISTS &#10003;</span>
+      </div>
+      <div class="baseline-card">
+        <div class="cite-name">Koufos v. Czarnikow (The Heron II)</div>
+        <span class="badge green">EXISTS &#10003;</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="step" data-step="4">
+    <div class="callout">
+      Existing tools caught 1 of 2 problems.<br>
+      The hallucinated citation is blocked. But the citation that <em style="color:var(--yellow)">arms opposing counsel</em>?
+      <span style="color:var(--green)">Green light.</span>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- ACT 3: CITATION DEFENDER                            -->
+<!-- ═══════════════════════════════════════════════════ -->
+<section class="act" id="act-3">
+  <div style="text-align:center; margin-bottom: 20px;">
+    <span class="act-label">Citation Defender</span>
+    <h1 style="font-size: clamp(28px, 4vw, 42px); margin-bottom: 4px;">Three-Level Validation</h1>
+    <p style="font-size: 15px; color: var(--text-dim); font-family: var(--mono); font-size: 12px;">Existence &middot; Argument Fit &middot; Adversarial Risk</p>
+  </div>
+
+  <!-- Panel 1: Alpha Foods — RED -->
+  <div class="step" data-step="5">
+    <div class="citation-panel panel-red" id="panel-alpha">
+      <div class="cite-header">Alpha Foods Distribution v. FreezeCorp Logistics, 421 F.Supp.3d 812 (S.D.N.Y. 2019)</div>
+
+      <div class="check-row" data-reveal="0">
+        <div class="check-icon fail">&#10007;</div>
+        <div class="check-label">Existence</div>
+        <div class="check-detail fail-text">No matching case in federal or state databases</div>
+      </div>
+      <div class="check-row dimmed" data-reveal="1">
+        <div class="check-icon na">&mdash;</div>
+        <div class="check-label">Argument Fit</div>
+        <div class="check-detail" style="color:var(--text-dim)">N/A</div>
+      </div>
+      <div class="check-row dimmed" data-reveal="2">
+        <div class="check-icon na">&mdash;</div>
+        <div class="check-label">Adversarial Risk</div>
+        <div class="check-detail" style="color:var(--text-dim)">N/A</div>
+      </div>
+
+      <div class="panel-status status-red">REJECTED &mdash; citation does not exist</div>
+    </div>
+  </div>
+
+  <!-- Panel 2: Victoria Laundry — GREEN -->
+  <div class="step" data-step="6">
+    <div class="citation-panel panel-green" id="panel-victoria">
+      <div class="cite-header">Victoria Laundry (Windsor) Ltd. v. Newman Industries Ltd. [1949] 2 KB 528</div>
+
+      <div class="check-row" data-reveal="0">
+        <div class="check-icon pass">&#10003;</div>
+        <div class="check-label">Existence</div>
+        <div class="check-detail">Verified in law reports</div>
+      </div>
+      <div class="check-row" data-reveal="1">
+        <div class="check-icon pass">&#10003;</div>
+        <div class="check-label">Argument Fit</div>
+        <div class="check-detail">Holding directly supports foreseeability of consequential damages for known-purpose goods</div>
+      </div>
+      <div class="check-row" data-reveal="2">
+        <div class="check-icon pass">&#10003;</div>
+        <div class="check-label">Adversarial Risk</div>
+        <div class="check-detail">No adverse findings for your case</div>
+      </div>
+
+      <div class="panel-status status-green">SAFE TO CITE</div>
+    </div>
+  </div>
+
+  <!-- Panel 3: Heron II — YELLOW -->
+  <div class="step" data-step="7">
+    <div class="citation-panel panel-yellow" id="panel-heron">
+      <div class="cite-header">Koufos v. Czarnikow Ltd. (The Heron II) [1969] 1 AC 350</div>
+
+      <div class="check-row" data-reveal="0">
+        <div class="check-icon pass">&#10003;</div>
+        <div class="check-label">Existence</div>
+        <div class="check-detail">Verified in law reports</div>
+      </div>
+      <div class="check-row" data-reveal="1">
+        <div class="check-icon pass">&#10003;</div>
+        <div class="check-label">Argument Fit</div>
+        <div class="check-detail">Lord Reid's opinion supports foreseeability doctrine</div>
+      </div>
+      <div class="check-row" data-reveal="2">
+        <div class="check-icon warn">&#9888;</div>
+        <div class="check-label">Adversarial Risk</div>
+        <div class="check-detail warn-text">This case also contains language that supports opposing counsel's position on foreseeability</div>
+      </div>
+
+      <div class="panel-status status-yellow">CITE WITH CAUTION</div>
+
+      <div class="reid-quote">
+        Lord Reid: "It is not enough that the loss was a foreseeable result of the breach;
+        it must be of a kind that was <em>NOT UNLIKELY</em> to result&hellip; a much higher degree
+        of probability than that required for tort."
+      </div>
+
+      <button class="impact-btn" onclick="advance()">View Case Impact &#8594;</button>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- ACT 4: THE CASCADE                                  -->
+<!-- ═══════════════════════════════════════════════════ -->
+<section class="act" id="act-4">
+  <div style="text-align:center; margin-bottom: 8px;">
+    <span class="act-label">Case Impact Analysis</span>
+  </div>
+
+  <!-- Step: Diagram appears -->
+  <div class="step" data-step="8" style="max-width: 700px;">
+    <div class="diagram-container" id="case-diagram">
+      <!-- Level 1 -->
+      <div class="claim-level">
+        <div class="claim-node" id="node-breach">
+          <div class="claim-label">Breach of Contract</div>
+          <div class="claim-tag established">Established</div>
+        </div>
+      </div>
+      <div class="connector" id="conn-1"></div>
+      <!-- Level 2 -->
+      <div class="claim-level">
+        <div class="claim-node" id="node-causation">
+          <div class="claim-label">Damages Caused by Breach</div>
+          <div class="claim-tag established">Established</div>
+        </div>
+      </div>
+      <div class="connector-fork" id="conn-fork"></div>
+      <div class="fork-drops" id="fork-drops">
+        <div class="fork-drop"></div>
+        <div class="fork-drop"></div>
+      </div>
+      <!-- Level 3: Disputed -->
+      <div class="claim-level" style="gap: 48px;">
+        <div class="claim-node" id="node-foreseeable" style="min-width: 200px;">
+          <div class="claim-label">Damages Were Foreseeable</div>
+          <div class="claim-tag your-position">Your Position</div>
+          <span class="cascade-badge warning-badge" id="badge-contested">CONTESTED</span>
+        </div>
+        <div class="claim-node" id="node-unforeseeable" style="min-width: 200px;">
+          <div class="claim-label">Damages Were NOT Foreseeable</div>
+          <div class="claim-tag opposing">Opposing Position</div>
+          <span class="cascade-badge warning-badge" id="badge-heron">HERON II</span>
+        </div>
+      </div>
+      <div class="connector" id="conn-2"></div>
+      <!-- Level 4: Verdict -->
+      <div class="claim-level">
+        <div class="claim-node" id="node-verdict">
+          <div class="claim-label">Entitled to Consequential Damages</div>
+          <div class="claim-tag verdict">$850,000</div>
+          <span class="cascade-badge risk-badge" id="badge-risk">AT RISK</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step: Cascade animates (handled by JS on same diagram) -->
+  <div class="step" data-step="9" style="max-width: 700px; display: flex; justify-content: center;">
+    <!-- Cascade animation is applied to the diagram above -->
+    <div style="text-align:center; color: var(--text-dim); font-family: var(--mono); font-size: 12px; letter-spacing: 1px;">
+      ANALYZING CASE IMPACT&hellip;
+    </div>
+  </div>
+
+  <!-- Step: Severity assessment -->
+  <div class="step" data-step="10" style="display: flex; justify-content: center;">
+    <div class="severity-panel" id="severity-panel">
+      <h3>&#9888; Case Impact Assessment</h3>
+
+      <div class="severity-line" data-sev="0">
+        The Heron II contains language that directly supports opposing counsel's position on foreseeability.
+      </div>
+      <div class="severity-line" data-sev="1" style="margin-top: 16px; color: var(--text-bright); font-weight: 600;">
+        If LogistCo cites Lord Reid's heightened probability standard, the following claims are at risk:
+      </div>
+      <div class="severity-line risk-item" data-sev="2">Consequential damages for lost venue contracts</div>
+      <div class="severity-line risk-item" data-sev="3">Alpha Venue contract ($280,000)</div>
+      <div class="severity-line risk-item" data-sev="4">Beta Venue contract ($310,000)</div>
+      <div class="severity-line risk-item" data-sev="5">Gamma Venue contract ($260,000)</div>
+
+      <div class="severity-summary severity-line" data-sev="6">
+        <div class="severity-stat">
+          <div class="num">3 of 5</div>
+          <div class="label">Claims at Risk</div>
+        </div>
+        <div class="severity-stat">
+          <div class="num">$850K</div>
+          <div class="label">Potential Exposure</div>
+        </div>
+      </div>
+
+      <div class="recommendation severity-line" data-sev="7">
+        <strong>Recommendation</strong><br>
+        Quote narrowly from the supporting passage. Prepare a rebuttal for Lord Reid's
+        "not unlikely" language before filing. Consider leading with Victoria Laundry instead.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- ACT 5: THE DELTA                                    -->
+<!-- ═══════════════════════════════════════════════════ -->
+<section class="act" id="act-5">
+  <div class="step" data-step="11">
+    <div style="text-align:center; margin-bottom: 20px;">
+      <span class="act-label">The Difference</span>
+    </div>
+    <table class="comparison-table">
+      <thead>
+        <tr>
+          <th style="text-align:left">Capability</th>
+          <th>AI Drafting Tools</th>
+          <th>Citation Checkers</th>
+          <th>Citation Defender</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Citation exists?</td>
+          <td class="no">&#10007;</td>
+          <td class="yes">&#10003;</td>
+          <td class="yes">&#10003;</td>
+        </tr>
+        <tr>
+          <td>Quote appears in opinion?</td>
+          <td class="no">&#10007;</td>
+          <td class="yes">&#10003;</td>
+          <td class="yes">&#10003;</td>
+        </tr>
+        <tr>
+          <td>Fits your specific argument?</td>
+          <td class="no">&#10007;</td>
+          <td class="no">&#10007;</td>
+          <td class="yes-highlight">&#10003;</td>
+        </tr>
+        <tr>
+          <td>Warns if it arms opposing counsel?</td>
+          <td class="no">&#10007;</td>
+          <td class="no">&#10007;</td>
+          <td class="yes-highlight">&#10003;</td>
+        </tr>
+        <tr>
+          <td>Shows which claims collapse?</td>
+          <td class="no">&#10007;</td>
+          <td class="no">&#10007;</td>
+          <td class="yes-highlight">&#10003;</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="step" data-step="12">
+    <div style="text-align:center; margin-bottom: 28px;">
+      <div style="font-family: var(--mono); font-size: 11px; letter-spacing: 1px; color: var(--text-dim); margin-bottom: 16px;">WHAT WE DO</div>
+      <div style="display: flex; justify-content: center; gap: 24px; flex-wrap: wrap; margin-bottom: 8px;">
+        <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 4px; padding: 12px 20px; font-family: var(--mono); font-size: 13px; color: var(--text-bright);">Detects adverse language inside supportive authorities</div>
+        <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 4px; padding: 12px 20px; font-family: var(--mono); font-size: 13px; color: var(--text-bright);">Maps citation risk across your full case theory</div>
+        <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 4px; padding: 12px 20px; font-family: var(--mono); font-size: 13px; color: var(--text-bright);">Built for AI-drafted motions, briefs, and memos</div>
+      </div>
+    </div>
+    <div class="closing">
+      <blockquote>
+        "Your team is one bad citation away from losing credibility, leverage, or money. We catch that before filing."
+      </blockquote>
+      <p style="font-size: 17px; color: var(--text); max-width: 600px; margin: 0 auto 24px; text-align: center;">
+        Before you file, know which citations strengthen your brief &mdash; and which hand ammunition to the other side.
+      </p>
+      <div class="patent-note">Patent Pending</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- JAVASCRIPT                                          -->
+<!-- ═══════════════════════════════════════════════════ -->
+<script>
+const TOTAL_STEPS = 13;
+let currentStep = -1;
+
+const STEP_ACTS = [
+  'act-1', 'act-1', 'act-1',  // steps 0-2: headline, case card, LLM paragraph
+  'act-2', 'act-2',            // steps 3-4: baseline results, gap callout
+  'act-3', 'act-3', 'act-3',  // steps 5-7: alpha, victoria, heron
+  'act-4', 'act-4', 'act-4',  // steps 8-10: diagram, cascade, severity
+  'act-5', 'act-5',            // steps 11-12: comparison, closing
+];
+
+function showStep(n) {
+  if (n < 0 || n >= TOTAL_STEPS) return;
+  currentStep = n;
+
+  // Update progress
+  document.getElementById('progress-fill').style.width =
+    ((n + 1) / TOTAL_STEPS * 100) + '%';
+  document.getElementById('step-indicator').textContent =
+    (n + 1) + ' / ' + TOTAL_STEPS;
+
+  // Show correct act
+  const targetAct = STEP_ACTS[n];
+  document.querySelectorAll('.act').forEach(a => a.classList.remove('active'));
+  document.getElementById(targetAct).classList.add('active');
+
+  // Show all steps up to current within active act
+  document.querySelectorAll('.step').forEach(s => {
+    const stepNum = parseInt(s.dataset.step);
+    if (STEP_ACTS[stepNum] === targetAct && stepNum <= n) {
+      s.classList.add('visible');
+    } else if (STEP_ACTS[stepNum] !== targetAct) {
+      // Keep steps in other acts visible if previously shown
+    }
+  });
+
+  // Trigger step-specific animations
+  if (n === 5) revealChecks('panel-alpha');
+  if (n === 6) revealChecks('panel-victoria');
+  if (n === 7) revealChecks('panel-heron');
+  if (n === 8) revealDiagram();
+  if (n === 9) animateCascade();
+  if (n === 10) revealSeverity();
+}
+
+function revealChecks(panelId) {
+  const panel = document.getElementById(panelId);
+  const rows = panel.querySelectorAll('.check-row');
+  rows.forEach((row, i) => {
+    setTimeout(() => row.classList.add('revealed'), 300 * i);
+  });
+  const status = panel.querySelector('.panel-status');
+  setTimeout(() => status.classList.add('revealed'), 300 * rows.length + 200);
+
+  // Heron II extras
+  if (panelId === 'panel-heron') {
+    const quote = panel.querySelector('.reid-quote');
+    const btn = panel.querySelector('.impact-btn');
+    setTimeout(() => { if (quote) quote.classList.add('revealed'); }, 1200);
+    setTimeout(() => { if (btn) btn.classList.add('revealed'); }, 1500);
+  }
+}
+
+function revealDiagram() {
+  const nodes = document.querySelectorAll('.claim-node');
+  const connectors = document.querySelectorAll('.connector, .connector-fork');
+  let delay = 0;
+  // Reveal nodes top to bottom
+  ['node-breach', 'conn-1', 'node-causation', 'conn-fork'].forEach(id => {
+    setTimeout(() => {
+      const el = document.getElementById(id);
+      if (el) el.classList.add('visible');
+    }, delay);
+    delay += 200;
+  });
+  setTimeout(() => {
+    document.getElementById('fork-drops').style.opacity = '1';
+  }, delay);
+  delay += 150;
+  ['node-foreseeable', 'node-unforeseeable'].forEach(id => {
+    setTimeout(() => document.getElementById(id).classList.add('visible'), delay);
+    delay += 200;
+  });
+  setTimeout(() => document.getElementById('conn-2').classList.add('visible'), delay);
+  delay += 200;
+  setTimeout(() => document.getElementById('node-verdict').classList.add('visible'), delay);
+}
+
+function animateCascade() {
+  // Step 1: Warning on unforeseeable
+  setTimeout(() => {
+    const n = document.getElementById('node-unforeseeable');
+    n.classList.add('hit-warning', 'pulse-warning');
+    document.getElementById('badge-heron').classList.add('visible');
+  }, 400);
+
+  // Step 2: Contest foreseeable
+  setTimeout(() => {
+    document.getElementById('node-foreseeable').classList.add('contested');
+    document.getElementById('badge-contested').classList.add('visible');
+  }, 1000);
+
+  // Step 3: Verdict at risk
+  setTimeout(() => {
+    const v = document.getElementById('node-verdict');
+    v.classList.add('at-risk', 'pulse-risk');
+    document.getElementById('badge-risk').classList.add('visible');
+  }, 1600);
+}
+
+function revealSeverity() {
+  const lines = document.querySelectorAll('.severity-line');
+  lines.forEach((line, i) => {
+    const d = parseInt(line.dataset.sev);
+    setTimeout(() => line.classList.add('visible'), 200 * d);
+  });
+}
+
+function advance() {
+  if (currentStep < TOTAL_STEPS - 1) showStep(currentStep + 1);
+}
+function retreat() {
+  if (currentStep > 0) showStep(currentStep - 1);
+}
+
+document.addEventListener('keydown', e => {
+  // Don't navigate while password gate is showing
+  if (!document.getElementById('password-gate').classList.contains('hidden')) return;
+  if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') {
+    e.preventDefault();
+    advance();
+  }
+  if (e.key === 'ArrowLeft') {
+    e.preventDefault();
+    retreat();
+  }
+});
+
+// ── PASSWORD GATE ──────────────────────────
+const GATE_CODE = 'defender';  // Change this to whatever you want
+
+function checkGate() {
+  const input = document.getElementById('gate-input');
+  if (input.value.toLowerCase().trim() === GATE_CODE) {
+    localStorage.setItem('cd_access', '1');
+    document.getElementById('password-gate').classList.add('hidden');
+    showStep(0);
+  } else {
+    input.classList.add('shake');
+    input.value = '';
+    input.placeholder = 'Try again';
+    setTimeout(() => input.classList.remove('shake'), 400);
+  }
+}
+
+document.getElementById('gate-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    e.stopPropagation();
+    checkGate();
+  }
+});
+
+// Initialize — skip gate if already authenticated from landing page
+document.getElementById('fork-drops').style.opacity = '0';
+if (localStorage.getItem('cd_access') === '1') {
+  document.getElementById('password-gate').classList.add('hidden');
+  showStep(0);
+} else {
+  document.getElementById('gate-input').focus();
+}
+</script>
+
+</body>
+</html>

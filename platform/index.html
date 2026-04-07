@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Case Defender Platform Preview</title>
+  <meta name="description" content="Case Defender platform preview: one engine, every phase of litigation.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&family=Spectral:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/styles.css">
+</head>
+<body>
+  <div id="platform-gate" class="gate-overlay">
+    <div class="gate-card">
+      <div class="eyebrow">Controlled preview</div>
+      <h1>Case Defender</h1>
+      <p>This warm entry is for viewers who already understand the core concept and want to see how the engine generalizes across the litigation lifecycle.</p>
+      <form id="gate-form" class="gate-form">
+        <input id="gate-input" type="password" placeholder="Enter access code" autocomplete="off">
+        <button class="primary" type="submit">Enter</button>
+      </form>
+      <div id="gate-error" class="error"></div>
+      <p class="small">Update the password in <code>assets/main.js</code> before publishing.</p>
+    </div>
+  </div>
+
+  <div class="site-shell">
+    <div class="container">
+      <nav class="nav">
+        <a class="brand" href="../index.html">
+          <span class="brand-mark">Case Defender</span>
+          <span class="brand-sub">One engine. Every phase defended.</span>
+        </a>
+        <div class="nav-links">
+          <a href="../index.html">Back to homepage</a>
+          <a href="../citation/index.html">Citation demo</a>
+          <a href="../motion/index.html">Motion demo</a>
+        </div>
+      </nav>
+
+      <section class="hero">
+        <div class="section-header" style="max-width:860px;">
+          <div class="eyebrow">Warm preview</div>
+          <h1>Case Defender. One engine. Every phase of litigation.</h1>
+          <p>You have seen how Citation Defender flags risky citations. This is how the same engine evaluates the rest of the case: where opposing counsel will apply pressure, how failures cascade, and which fallback paths keep the matter alive.</p>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-header">
+          <div class="eyebrow">Core idea</div>
+          <h2>Every case has a breaking point.</h2>
+          <p>Not where it is weakest in isolation — where opposing counsel will push hardest. Case Defender identifies those points early, models the cascade, and surfaces alternatives before filing or response deadlines force your hand.</p>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-header">
+          <div class="eyebrow">System overview</div>
+          <h2>One engine. Multiple applications.</h2>
+        </div>
+        <div class="panel">
+          <div class="timeline-line" style="font-size:14px;">
+            <span class="active">Filing</span><span class="active">Motion Practice</span><span>Discovery</span><span>Depositions</span><span>Trial</span><span>Appeal</span>
+          </div>
+          <p style="margin-top:18px;">Each module applies the same adversarial model: what assumptions does the case rely on, where can opposing counsel break them, what happens if they succeed, and what alternative paths are still available?</p>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-header">
+          <div class="eyebrow">Featured module</div>
+          <h2>Motion Defender leads the warm demo.</h2>
+          <p>It shows the system's real value: not just whether a motion is likely to succeed, but what breaks next if it does.</p>
+        </div>
+        <div class="two-col">
+          <div class="module-card">
+            <div class="badge live">Live demo</div>
+            <h3>Motion Defender</h3>
+            <p>Analyze opposing motions. Trace the blast radius across your theory of the case. Generate primary, fallback, and compromise response paths.</p>
+            <div class="motion-cascade" style="margin:20px 0 22px;">
+              <div>Motion excludes key evidence</div>
+              <div class="arrow">↓</div>
+              <div>Foreseeability weakens</div>
+              <div class="arrow">↓</div>
+              <div>Negligence claim destabilizes</div>
+              <div class="arrow">↓</div>
+              <div>$850K exposure emerges</div>
+            </div>
+            <a class="button primary" href="../motion/index.html">Explore Motion Defender</a>
+          </div>
+          <div class="module-card">
+            <div class="badge live">Live demo</div>
+            <h3>Citation Defender</h3>
+            <p>Identify the citations that exist, appear correct, and still give opposing counsel leverage. In many matters, this is where the cascade begins.</p>
+            <a class="button" style="margin-top:22px;" href="../citation/index.html">Explore Citation Defender</a>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-header">
+          <div class="eyebrow">The engine</div>
+          <h2>Not a collection of tools. A single reasoning system.</h2>
+        </div>
+        <div class="four-col">
+          <div class="step"><div class="kicker">1</div><h3>Identify assumptions</h3><p>Map the structural claims, evidence, and dependencies in the matter.</p></div>
+          <div class="step"><div class="kicker">2</div><h3>Simulate attacks</h3><p>Model the strongest opposing counsel arguments against those dependencies.</p></div>
+          <div class="step"><div class="kicker">3</div><h3>Trace cascades</h3><p>Surface what else fails if a challenge lands.</p></div>
+          <div class="step"><div class="kicker">4</div><h3>Generate alternatives</h3><p>Recommend backup paths before the real-world response window closes.</p></div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-header">
+          <div class="eyebrow">Roadmap</div>
+          <h2>Modules extending the same adversarial engine.</h2>
+        </div>
+        <div class="two-col">
+          <div class="module-card"><div class="badge soon">Roadmap</div><h3>Discovery Defender</h3><p>Identify missing evidence and exposure patterns before opposing counsel does.</p></div>
+          <div class="module-card"><div class="badge soon">Roadmap</div><h3>Deposition Defender</h3><p>Predict evasion patterns and pressure-test testimony before the witness sits down.</p></div>
+          <div class="module-card"><div class="badge soon">Roadmap</div><h3>Objection Defender</h3><p>Surface objection opportunities in real time during trial and hearing flow.</p></div>
+          <div class="module-card"><div class="badge soon">Roadmap</div><h3>Verdict Defender</h3><p>Model verdict vulnerability and appellate exposure before the other side does.</p></div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-header">
+          <div class="eyebrow">Shared matter</div>
+          <h2>One case. Multiple failure points.</h2>
+          <p>All modules operate on the same underlying matter, revealing how decisions in one phase affect outcomes in another. That is what makes the platform feel coherent instead of modular for its own sake.</p>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-header">
+          <div class="eyebrow">Access</div>
+          <h2>This is a controlled preview.</h2>
+          <p>Case Defender is currently available to a limited set of firms and partners.</p>
+        </div>
+        <div class="cta-row">
+          <a class="button primary" href="mailto:info@monkey-business.com?subject=Case%20Defender%20Full%20Access">Request Full Access</a>
+          <a class="button" href="mailto:info@monkey-business.com?subject=Case%20Defender%20Private%20Walkthrough">Schedule Private Walkthrough</a>
+        </div>
+      </section>
+
+      <footer class="footer">
+        <div class="footer-inner">
+          <div>Warm preview</div>
+          <div>Lead with Motion Defender in live walkthroughs. Use Citation Defender as the wedge.</div>
+        </div>
+      </footer>
+    </div>
+  </div>
+  <script src="../assets/main.js"></script>
+</body>
+</html>

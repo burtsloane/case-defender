@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Motion Defender</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0c0e1a;
+    --bg-raised: #12152a;
+    --bg-card: #161937;
+    --bg-card-hover: #1c2045;
+    --border: #252a4a;
+    --border-subtle: #1e2240;
+    --text: #d8dae6;
+    --text-dim: #8b90b4;
+    --text-bright: #f0f1f7;
+    --serif: 'Cormorant Garamond', 'Georgia', serif;
+    --mono: 'JetBrains Mono', 'Menlo', monospace;
+    --gold: #e2b714;
+    --blue: #60a5fa;
+    --green: #4ade80;
+    --red: #e94560;
+    --amber: #f59e0b;
+    --yellow: #fbbf24;
+    --red-glow: rgba(233, 69, 96, 0.12);
+    --green-glow: rgba(74, 222, 128, 0.10);
+    --yellow-glow: rgba(251, 191, 36, 0.10);
+    --amber-glow: rgba(245, 158, 11, 0.10);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: var(--serif);
+    font-size: 16px;
+    font-weight: 400;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    min-height: 100vh;
+    overflow: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      linear-gradient(rgba(37, 42, 74, 0.12) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(37, 42, 74, 0.12) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── PROGRESS BAR ─────────────────────── */
+  #progress-bar { position: fixed; top: 0; left: 0; width: 100%; height: 3px; background: var(--border-subtle); z-index: 100; }
+  #progress-bar .fill { height: 100%; background: var(--amber); transition: width 0.4s ease; width: 0%; }
+
+  /* ── NAVIGATION ───────────────────────── */
+  #presenter-nav { position: fixed; bottom: 32px; right: 32px; display: flex; align-items: center; gap: 16px; z-index: 100; font-family: var(--mono); font-size: 12px; }
+  #presenter-nav button { background: var(--bg-card); border: 1px solid var(--border); color: var(--text); padding: 8px 20px; border-radius: 4px; cursor: pointer; font-family: var(--mono); font-size: 12px; transition: all 0.2s; }
+  #presenter-nav button:hover { background: var(--bg-card-hover); border-color: var(--amber); color: var(--text-bright); }
+  #step-indicator { color: var(--text-dim); min-width: 48px; text-align: center; }
+  .back-link { position: fixed; top: 16px; left: 24px; font-family: var(--mono); font-size: 12px; color: var(--text-dim); text-decoration: none; z-index: 100; transition: color 0.2s; }
+  .back-link:hover { color: var(--text-bright); }
+
+  /* ── ACTS ──────────────────────────────── */
+  .act { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 48px 32px 80px; z-index: 1; opacity: 0; pointer-events: none; transition: opacity 0.5s ease; overflow-y: auto; }
+  .act.active { opacity: 1; pointer-events: auto; }
+  .act::before { content: ''; flex: 1 1 0; min-height: 16px; }
+  .act::after { content: ''; flex: 1 1 0; min-height: 16px; }
+
+  .act-label { font-family: var(--mono); font-size: 12px; font-weight: 500; letter-spacing: 3px; text-transform: uppercase; color: var(--text-dim); margin-bottom: 8px; }
+  .act h1 { font-family: var(--serif); font-size: clamp(32px, 5vw, 56px); font-weight: 700; color: var(--text-bright); line-height: 1.1; margin-bottom: 32px; text-align: center; }
+
+  /* ── STEP VISIBILITY ──────────────────── */
+  .step { opacity: 0; transform: translateY(16px); transition: opacity 0.5s ease, transform 0.5s ease; max-width: 900px; width: 100%; }
+  .step.visible { opacity: 1; transform: translateY(0); }
+
+  /* ── MOTION CARD (Act 1) ──────────────── */
+  .motion-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--amber);
+    border-radius: 6px;
+    padding: 28px 32px;
+    margin-bottom: 24px;
+  }
+  .motion-card .filed-by {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 8px;
+  }
+  .motion-card .motion-title {
+    font-family: var(--serif);
+    font-size: 20px;
+    font-weight: 600;
+    font-style: italic;
+    color: var(--text-bright);
+    margin-bottom: 12px;
+  }
+  .motion-card .motion-basis {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--text);
+  }
+
+  /* ── TARGET PANEL (Act 1) ─────────────── */
+  .target-panel {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 28px 32px;
+    margin-bottom: 24px;
+  }
+  .target-panel h3 {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 16px;
+  }
+  .target-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 12px;
+    font-size: 16px;
+  }
+  .target-icon {
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: rgba(245, 158, 11, 0.2);
+    color: var(--amber);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    margin-top: 2px;
+  }
+  .target-label {
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-dim);
+    min-width: 100px;
+    margin-top: 3px;
+  }
+  .target-detail { color: var(--text-bright); flex: 1; }
+
+  /* ── CASE IMPACT DIAGRAM (Act 2) ──────── */
+  .diagram-container { display: flex; flex-direction: column; align-items: center; gap: 0; margin-bottom: 32px; }
+  .claim-level { display: flex; justify-content: center; gap: 32px; position: relative; }
+  .claim-node {
+    background: var(--bg-card); border: 2px solid var(--border); border-radius: 8px;
+    padding: 12px 20px; text-align: center; min-width: 180px; max-width: 240px;
+    font-size: 14px; color: var(--text); position: relative;
+    opacity: 0; transform: translateY(8px); transition: all 0.5s ease;
+  }
+  .claim-node.visible { opacity: 1; transform: translateY(0); }
+  .claim-node .claim-label { font-family: var(--serif); font-size: 15px; font-weight: 600; color: var(--text-bright); margin-bottom: 4px; }
+  .claim-node .claim-tag { font-family: var(--mono); font-size: 11px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
+  .claim-tag.established { color: var(--green); }
+  .claim-tag.your-position { color: var(--blue); }
+  .claim-tag.supporting { color: var(--green); }
+  .claim-tag.opposing { color: var(--amber); }
+  .claim-tag.verdict { color: var(--gold); }
+
+  .connector { width: 2px; height: 24px; background: var(--border); margin: 0 auto; opacity: 0; transition: opacity 0.3s ease; }
+  .connector.visible { opacity: 1; }
+  .connector-fork { display: flex; justify-content: center; position: relative; height: 24px; opacity: 0; transition: opacity 0.3s ease; }
+  .connector-fork.visible { opacity: 1; }
+  .connector-fork::before { content: ''; position: absolute; top: 0; height: 12px; width: 2px; background: var(--border); left: 50%; }
+  .connector-fork::after { content: ''; position: absolute; top: 12px; height: 2px; left: calc(50% - 120px); width: 240px; background: var(--border); }
+  .fork-drops { display: flex; justify-content: center; gap: 240px; position: relative; }
+  .fork-drop { width: 2px; height: 12px; background: var(--border); }
+
+  /* Cascade states */
+  .claim-node.excluded { border-color: var(--red); box-shadow: 0 0 20px rgba(233, 69, 96, 0.2); }
+  .claim-node.excluded .claim-label { color: var(--red); text-decoration: line-through; }
+  .claim-node.weakened { border-color: var(--amber); opacity: 0.6; }
+  .claim-node.at-risk { border-color: var(--red); box-shadow: 0 0 16px rgba(233, 69, 96, 0.15); }
+  .claim-node.at-risk .claim-label { color: var(--red); }
+  .cascade-badge {
+    position: absolute; top: -12px; right: -8px;
+    font-family: var(--mono); font-size: 10px; font-weight: 700; letter-spacing: 1px;
+    padding: 4px 10px; border-radius: 3px;
+    opacity: 0; transition: opacity 0.4s ease; white-space: nowrap;
+  }
+  .cascade-badge.visible { opacity: 1; }
+  .cascade-badge.excluded-badge { background: var(--red); color: #fff; }
+  .cascade-badge.weakened-badge { background: var(--amber); color: #1a1a2e; }
+  .cascade-badge.risk-badge { background: var(--red); color: #fff; }
+
+  @keyframes pulse-red {
+    0%, 100% { box-shadow: 0 0 16px rgba(233, 69, 96, 0.15); }
+    50% { box-shadow: 0 0 28px rgba(233, 69, 96, 0.3); }
+  }
+  .pulse-risk { animation: pulse-red 1.5s ease infinite; }
+
+  /* ── SEVERITY PANEL (Act 2) ───────────── */
+  .severity-panel {
+    background: var(--bg-card); border: 1px solid var(--border); border-left: 3px solid var(--red);
+    border-radius: 6px; padding: 32px 36px; max-width: 680px; width: 100%;
+  }
+  .severity-panel h3 { font-family: var(--serif); font-size: 20px; font-weight: 700; color: var(--red); margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+  .severity-line { opacity: 0; transform: translateY(4px); transition: opacity 0.3s ease, transform 0.3s ease; margin-bottom: 8px; font-size: 17px; line-height: 1.7; color: var(--text-bright); }
+  .severity-line.visible { opacity: 1; transform: translateY(0); }
+  .severity-summary { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border-subtle); display: flex; gap: 32px; }
+  .severity-stat { text-align: center; }
+  .severity-stat .num { font-family: var(--mono); font-size: 28px; font-weight: 600; color: var(--red); }
+  .severity-stat .label { font-family: var(--mono); font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--text-dim); }
+
+  /* ── ALTERNATIVE EVIDENCE (Act 3) ─────── */
+  .alt-evidence-card {
+    background: var(--bg-card); border: 1px solid var(--border); border-left: 3px solid var(--green);
+    border-radius: 6px; padding: 20px 24px; margin-bottom: 12px;
+    opacity: 0; transform: translateX(-8px); transition: opacity 0.4s ease, transform 0.4s ease;
+  }
+  .alt-evidence-card.visible { opacity: 1; transform: translateX(0); }
+  .alt-evidence-card .evidence-source {
+    font-family: var(--mono); font-size: 12px; font-weight: 600; letter-spacing: 1px;
+    text-transform: uppercase; color: var(--green); margin-bottom: 6px;
+  }
+  .alt-evidence-card .evidence-text { font-size: 16px; color: var(--text-bright); margin-bottom: 6px; font-style: italic; }
+  .alt-evidence-card .evidence-status { font-family: var(--mono); font-size: 12px; color: var(--text); }
+
+  .alt-assessment {
+    background: rgba(74, 222, 128, 0.06); border: 1px solid rgba(74, 222, 128, 0.2);
+    border-radius: 4px; padding: 16px 20px; margin-top: 16px;
+    font-size: 16px; color: var(--green); font-weight: 600; text-align: center;
+    opacity: 0; transition: opacity 0.4s ease;
+  }
+  .alt-assessment.visible { opacity: 1; }
+
+  /* ── OPPOSITION STRATEGY (Act 3) ──────── */
+  .strategy-panel {
+    background: var(--bg-card); border: 1px solid var(--border); border-left: 3px solid var(--blue);
+    border-radius: 6px; padding: 28px 32px;
+  }
+  .strategy-panel h3 { font-family: var(--mono); font-size: 13px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--blue); margin-bottom: 20px; }
+  .strategy-item { margin-bottom: 16px; }
+  .strategy-item .strategy-label {
+    font-family: var(--mono); font-size: 11px; font-weight: 600; letter-spacing: 1px;
+    text-transform: uppercase; color: var(--text-dim); margin-bottom: 4px;
+  }
+  .strategy-item .strategy-text { font-size: 16px; color: var(--text-bright); }
+  .strategy-integration {
+    margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--border-subtle);
+    font-family: var(--mono); font-size: 13px; color: var(--green); font-weight: 600;
+  }
+
+  /* ── COMPARISON TABLE (Act 4) ─────────── */
+  .comparison-table { width: 100%; border-collapse: collapse; margin-bottom: 32px; }
+  .comparison-table th, .comparison-table td { padding: 14px 20px; text-align: center; border-bottom: 1px solid var(--border-subtle); font-size: 15px; }
+  .comparison-table th { font-family: var(--mono); font-size: 12px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--text-dim); background: var(--bg-raised); }
+  .comparison-table th:last-child { color: var(--amber); }
+  .comparison-table td:first-child { text-align: left; font-family: var(--serif); font-size: 15px; color: var(--text-bright); min-width: 200px; }
+  .comparison-table .yes { color: var(--green); font-weight: 700; font-size: 18px; }
+  .comparison-table .no { color: var(--text-dim); font-size: 18px; }
+  .comparison-table .yes-highlight { color: var(--green); font-weight: 700; font-size: 18px; text-shadow: 0 0 12px rgba(74, 222, 128, 0.3); }
+
+  .closing { text-align: center; padding: 40px 0; }
+  .closing blockquote { font-family: var(--serif); font-size: clamp(22px, 3vw, 32px); font-weight: 600; font-style: italic; color: var(--text-bright); line-height: 1.5; max-width: 720px; margin: 0 auto 24px; }
+  .closing .patent-note { font-family: var(--mono); font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-dim); }
+
+  /* ── PASSWORD GATE ─────────────────────── */
+  #password-gate { position: fixed; inset: 0; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 500; padding: 32px; }
+  #password-gate.hidden { display: none; }
+  #password-gate h1 { font-family: var(--serif); font-size: 42px; font-weight: 700; color: var(--text-bright); margin-bottom: 8px; }
+  #password-gate .subtitle { font-family: var(--mono); font-size: 12px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-dim); margin-bottom: 40px; }
+  #password-gate .gate-form { display: flex; gap: 12px; align-items: center; }
+  #password-gate input { font-family: var(--mono); font-size: 15px; padding: 10px 20px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 4px; color: var(--text-bright); outline: none; width: 240px; transition: border-color 0.2s; }
+  #password-gate input:focus { border-color: var(--amber); }
+  #password-gate input.shake { animation: shake 0.4s ease; border-color: var(--red); }
+  #password-gate button { font-family: var(--mono); font-size: 13px; font-weight: 600; padding: 10px 24px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 4px; color: var(--text); cursor: pointer; transition: all 0.2s; }
+  #password-gate button:hover { border-color: var(--amber); color: var(--text-bright); }
+  #password-gate .gate-hint { font-family: var(--mono); font-size: 11px; color: var(--text-dim); margin-top: 16px; }
+  @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 50% { transform: translateX(8px); } 75% { transform: translateX(-4px); } }
+
+  noscript .fallback-msg { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 48px 32px; text-align: center; position: relative; z-index: 200; }
+  noscript .fallback-msg h1 { font-family: 'Cormorant Garamond', 'Georgia', serif; font-size: 36px; font-weight: 700; color: #f0f1f7; margin-bottom: 24px; }
+  noscript .fallback-msg p { font-size: 18px; color: #d8dae6; max-width: 520px; margin-bottom: 16px; line-height: 1.7; }
+</style>
+</head>
+<body>
+
+<noscript><div class="fallback-msg"><h1>Motion Defender</h1><p>This page requires a web browser. Save and open with Safari, Chrome, or Firefox.</p></div></noscript>
+
+<!-- Password Gate -->
+<div id="password-gate">
+  <h1>Motion Defender</h1>
+  <div class="subtitle">Confidential Preview</div>
+  <div class="gate-form">
+    <input type="password" id="gate-input" placeholder="Access code" autocomplete="off">
+    <button onclick="checkGate()">Enter</button>
+  </div>
+  <div class="gate-hint">Contact presenter for access</div>
+</div>
+
+<div id="progress-bar"><div class="fill" id="progress-fill"></div></div>
+<nav id="presenter-nav">
+  <button onclick="retreat()">&#8592; Back</button>
+  <span id="step-indicator"></span>
+  <button onclick="advance()">Next &#8594;</button>
+</nav>
+<a href="./index.html" class="back-link">&#8592; Case Defender</a>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- ACT 1: THE MOTION LANDS                     -->
+<!-- ═══════════════════════════════════════════ -->
+<section class="act" id="act-1">
+  <div class="step" data-step="0">
+    <div style="text-align:center; margin-bottom: 24px;">
+      <h1 style="margin-bottom: 16px;">A motion can win or lose your case<br>before trial begins.</h1>
+      <p style="font-size: 19px; color: var(--text); max-width: 640px; margin: 0 auto 24px;">
+        Motion Defender shows you the <em style="color:var(--red); font-weight:600;">blast radius</em> before you respond &mdash;
+        and hands you the <em style="color:var(--green); font-weight:600;">blueprint</em> for your opposition.
+      </p>
+      <div style="font-family: var(--mono); font-size: 12px; letter-spacing: 1px; color: var(--text-dim); border: 1px solid var(--border); display: inline-block; padding: 6px 16px; border-radius: 3px;">
+        ADVERSARIAL MOTION ANALYSIS FOR LITIGATION
+      </div>
+    </div>
+  </div>
+
+  <div class="step" data-step="1">
+    <div class="motion-card">
+      <div class="filed-by">Opposing Counsel Filed</div>
+      <div class="motion-title">LogistCo's Motion in Limine No. 3 &mdash; To Exclude Internal Correspondence RE: Vendor Relationships</div>
+      <div class="motion-basis">Basis: FRE 403 (unfair prejudice) &middot; FRE 802 (hearsay)</div>
+    </div>
+  </div>
+
+  <div class="step" data-step="2">
+    <div class="target-panel">
+      <h3>Motion Target Identified</h3>
+      <div class="target-item">
+        <div class="target-icon">&#9673;</div>
+        <div class="target-label">Exhibits</div>
+        <div class="target-detail">Exhibits 12&ndash;15 (internal LogistCo emails, March&ndash;June 2024)</div>
+      </div>
+      <div class="target-item">
+        <div class="target-icon">&#9673;</div>
+        <div class="target-label">Claim</div>
+        <div class="target-detail" style="color:var(--amber); font-weight:600;">Carrier Had Knowledge of Vendor Relationships</div>
+      </div>
+      <div class="target-item">
+        <div class="target-icon">&#9673;</div>
+        <div class="target-label">Exposure</div>
+        <div class="target-detail" style="color:var(--red); font-weight:600;">$850,000 &mdash; entire consequential damages theory depends on this evidence</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- ACT 2: IMPACT IF GRANTED                    -->
+<!-- ═══════════════════════════════════════════ -->
+<section class="act" id="act-2">
+  <div style="text-align:center; margin-bottom: 8px;">
+    <span class="act-label">If the Court Grants This Motion</span>
+  </div>
+
+  <div class="step" data-step="3" style="max-width: 700px;">
+    <div class="diagram-container" id="case-diagram">
+      <div class="claim-level">
+        <div class="claim-node" id="node-breach">
+          <div class="claim-label">Breach of Contract</div>
+          <div class="claim-tag established">Established</div>
+        </div>
+      </div>
+      <div class="connector" id="conn-1"></div>
+      <div class="claim-level">
+        <div class="claim-node" id="node-causation">
+          <div class="claim-label">Damages Caused by Breach</div>
+          <div class="claim-tag established">Established</div>
+        </div>
+      </div>
+      <div class="connector" id="conn-2"></div>
+      <div class="claim-level">
+        <div class="claim-node" id="node-knowledge" style="min-width: 260px;">
+          <div class="claim-label">Carrier Had Knowledge of Vendor Relationships</div>
+          <div class="claim-tag supporting">Supporting Evidence</div>
+          <span class="cascade-badge excluded-badge" id="badge-excluded">EXCLUDED</span>
+        </div>
+      </div>
+      <div class="connector" id="conn-3"></div>
+      <div class="claim-level" style="gap: 48px;">
+        <div class="claim-node" id="node-foreseeable" style="min-width: 200px;">
+          <div class="claim-label">Damages Were Foreseeable</div>
+          <div class="claim-tag your-position">Your Position</div>
+          <span class="cascade-badge weakened-badge" id="badge-weakened">WEAKENED</span>
+        </div>
+        <div class="claim-node" id="node-unforeseeable" style="min-width: 200px;">
+          <div class="claim-label">Damages Were NOT Foreseeable</div>
+          <div class="claim-tag opposing">Opposing Position</div>
+        </div>
+      </div>
+      <div class="connector" id="conn-4"></div>
+      <div class="claim-level">
+        <div class="claim-node" id="node-verdict">
+          <div class="claim-label">Entitled to Consequential Damages</div>
+          <div class="claim-tag verdict">$850,000</div>
+          <span class="cascade-badge risk-badge" id="badge-risk">AT RISK</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="step" data-step="4" style="max-width: 700px; display: flex; justify-content: center;">
+    <div style="text-align:center; color: var(--text-dim); font-family: var(--mono); font-size: 12px; letter-spacing: 1px;">
+      ANALYZING MOTION IMPACT&hellip;
+    </div>
+  </div>
+
+  <div class="step" data-step="5" style="display: flex; justify-content: center;">
+    <div class="severity-panel" id="severity-panel">
+      <h3>&#9888; Motion Impact Assessment</h3>
+      <div class="severity-line" data-sev="0">If the court grants this motion, Exhibits 12&ndash;15 are excluded from trial.</div>
+      <div class="severity-line" data-sev="1" style="font-weight: 600;">Without the internal emails, your foreseeability argument loses its primary evidence:</div>
+      <div class="severity-line" data-sev="2" style="padding-left: 20px; color: var(--red);">&#8594; "Carrier Had Knowledge" &mdash; primary evidence excluded</div>
+      <div class="severity-line" data-sev="3" style="padding-left: 20px; color: var(--amber);">&#8594; "Damages Were Foreseeable" &mdash; weakened without knowledge proof</div>
+      <div class="severity-line" data-sev="4" style="padding-left: 20px; color: var(--amber);">&#8594; "Consequential Damages" &mdash; entire theory at risk</div>
+      <div class="severity-summary severity-line" data-sev="5">
+        <div class="severity-stat">
+          <div class="num">HIGH</div>
+          <div class="label">Severity</div>
+        </div>
+        <div class="severity-stat">
+          <div class="num">$850K</div>
+          <div class="label">Exposure</div>
+        </div>
+        <div class="severity-stat">
+          <div class="num">3 of 5</div>
+          <div class="label">Claims Affected</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- ACT 3: ALTERNATIVE PATHS + OPPOSITION       -->
+<!-- ═══════════════════════════════════════════ -->
+<section class="act" id="act-3">
+  <div style="text-align:center; margin-bottom: 20px;">
+    <span class="act-label">But You Have Options</span>
+    <h1 style="font-size: clamp(28px, 4vw, 42px); margin-bottom: 4px;">Alternative Evidence Paths</h1>
+    <p style="font-size: 15px; color: var(--text-dim); font-family: var(--mono); font-size: 12px;">Can you still prove "Carrier Had Knowledge" without the emails?</p>
+  </div>
+
+  <div class="step" data-step="6">
+    <div class="alt-evidence-card" id="alt-1">
+      <div class="evidence-source">Deposition Testimony</div>
+      <div class="evidence-text">"We knew Acme was their only refrigerated supplier for those venues."</div>
+      <div class="evidence-status">LogistCo dispatcher deposition, pg 47, lines 3&ndash;12 &middot; <strong style="color:var(--green)">Admissible &mdash; already in record</strong></div>
+    </div>
+    <div class="alt-evidence-card" id="alt-2">
+      <div class="evidence-source">Documentary Evidence</div>
+      <div class="evidence-text">Contract rider &sect;4.2 explicitly references "exclusive vendor arrangement"</div>
+      <div class="evidence-status">Signed contract exhibit &middot; <strong style="color:var(--green)">Not subject to FRE 802</strong></div>
+    </div>
+    <div class="alt-evidence-card" id="alt-3">
+      <div class="evidence-source">Party Admission</div>
+      <div class="evidence-text">LogistCo's bid proposal mentions "serving Acme's five exclusive venue contracts"</div>
+      <div class="evidence-status">Business proposal &middot; <strong style="color:var(--green)">FRE 801(d)(2) &mdash; party admission</strong></div>
+    </div>
+    <div class="alt-assessment" id="alt-result">
+      Knowledge claim <strong>SURVIVES</strong> exclusion through 3 independent evidence paths
+    </div>
+  </div>
+
+  <div class="step" data-step="7">
+    <div class="strategy-panel">
+      <h3>Recommended Opposition Strategy</h3>
+      <div class="strategy-item">
+        <div class="strategy-label">Primary Argument</div>
+        <div class="strategy-text">Exhibits 12&ndash;15 are party admissions under FRE 801(d)(2), not hearsay. Business records exception FRE 803(6) also applies.</div>
+      </div>
+      <div class="strategy-item">
+        <div class="strategy-label">Fallback</div>
+        <div class="strategy-text">Even if excluded, 3 alternative evidence paths establish the same fact. Motion is moot as to the foreseeability issue.</div>
+      </div>
+      <div class="strategy-item">
+        <div class="strategy-label">If Court Is Inclined to Grant</div>
+        <div class="strategy-text">Request a limiting instruction rather than full exclusion. Permit use for notice/knowledge purpose, exclude for truth-of-matter-asserted.</div>
+      </div>
+      <div class="strategy-integration">&#10003; Citation Defender: 2 citations checked for this opposition &mdash; both clean</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- ACT 4: THE DELTA                            -->
+<!-- ═══════════════════════════════════════════ -->
+<section class="act" id="act-4">
+  <div class="step" data-step="8">
+    <div style="text-align:center; margin-bottom: 20px;">
+      <span class="act-label">The Difference</span>
+    </div>
+    <table class="comparison-table">
+      <thead>
+        <tr>
+          <th style="text-align:left">Capability</th>
+          <th>Read the Motion</th>
+          <th>General AI</th>
+          <th>Motion Defender</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Identify what's targeted?</td>
+          <td class="no">Manual</td>
+          <td class="no">Partial</td>
+          <td class="yes-highlight">Automated</td>
+        </tr>
+        <tr>
+          <td>Show impact if granted?</td>
+          <td class="no">Intuition</td>
+          <td class="no">&#10007;</td>
+          <td class="yes-highlight">Full cascade</td>
+        </tr>
+        <tr>
+          <td>Find alternative evidence?</td>
+          <td class="no">Hours</td>
+          <td class="no">&#10007;</td>
+          <td class="yes-highlight">Instant</td>
+        </tr>
+        <tr>
+          <td>Draft opposition strategy?</td>
+          <td class="no">Hours</td>
+          <td class="no">Generic</td>
+          <td class="yes-highlight">Case-specific</td>
+        </tr>
+        <tr>
+          <td>Check opposition citations?</td>
+          <td class="no">Separate tool</td>
+          <td class="no">&#10007;</td>
+          <td class="yes-highlight">Built in</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="step" data-step="9">
+    <div class="closing">
+      <blockquote>
+        "Every motion is a threat assessment. Motion Defender shows you the blast radius before you respond &mdash; and hands you the blueprint for your opposition."
+      </blockquote>
+      <p style="font-size: 17px; color: var(--text); max-width: 600px; margin: 0 auto 24px; text-align: center;">
+        Don't just oppose the motion. Understand what you lose, what survives, and how to win.
+      </p>
+      <div class="patent-note">Patent Pending</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- JAVASCRIPT                                  -->
+<!-- ═══════════════════════════════════════════ -->
+<script>
+const TOTAL_STEPS = 10;
+let currentStep = -1;
+
+const STEP_ACTS = [
+  'act-1', 'act-1', 'act-1',  // 0-2: headline, motion card, target
+  'act-2', 'act-2', 'act-2',  // 3-5: diagram, cascade, severity
+  'act-3', 'act-3',            // 6-7: alternative evidence, opposition
+  'act-4', 'act-4',            // 8-9: comparison, closing
+];
+
+function showStep(n) {
+  if (n < 0 || n >= TOTAL_STEPS) return;
+  currentStep = n;
+
+  document.getElementById('progress-fill').style.width = ((n + 1) / TOTAL_STEPS * 100) + '%';
+  document.getElementById('step-indicator').textContent = (n + 1) + ' / ' + TOTAL_STEPS;
+
+  const targetAct = STEP_ACTS[n];
+  document.querySelectorAll('.act').forEach(a => a.classList.remove('active'));
+  document.getElementById(targetAct).classList.add('active');
+
+  document.querySelectorAll('.step').forEach(s => {
+    const stepNum = parseInt(s.dataset.step);
+    if (STEP_ACTS[stepNum] === targetAct && stepNum <= n) {
+      s.classList.add('visible');
+    }
+  });
+
+  if (n === 3) revealDiagram();
+  if (n === 4) animateCascade();
+  if (n === 5) revealSeverity();
+  if (n === 6) revealEvidence();
+}
+
+function revealDiagram() {
+  const ids = ['node-breach', 'conn-1', 'node-causation', 'conn-2', 'node-knowledge', 'conn-3', 'node-foreseeable', 'node-unforeseeable', 'conn-4', 'node-verdict'];
+  let delay = 0;
+  ids.forEach(id => {
+    setTimeout(() => {
+      const el = document.getElementById(id);
+      if (el) el.classList.add('visible');
+    }, delay);
+    delay += 150;
+  });
+  var fd = document.getElementById('fork-drops');
+  if (fd) setTimeout(() => { fd.style.opacity = '1'; }, 750);
+}
+
+function animateCascade() {
+  setTimeout(() => {
+    document.getElementById('node-knowledge').classList.add('excluded');
+    document.getElementById('badge-excluded').classList.add('visible');
+  }, 400);
+  setTimeout(() => {
+    document.getElementById('node-foreseeable').classList.add('weakened');
+    document.getElementById('badge-weakened').classList.add('visible');
+  }, 1000);
+  setTimeout(() => {
+    document.getElementById('node-verdict').classList.add('at-risk', 'pulse-risk');
+    document.getElementById('badge-risk').classList.add('visible');
+  }, 1600);
+}
+
+function revealSeverity() {
+  document.querySelectorAll('.severity-line').forEach(line => {
+    const d = parseInt(line.dataset.sev);
+    setTimeout(() => line.classList.add('visible'), 200 * d);
+  });
+}
+
+function revealEvidence() {
+  ['alt-1', 'alt-2', 'alt-3'].forEach((id, i) => {
+    setTimeout(() => document.getElementById(id).classList.add('visible'), 400 * i);
+  });
+  setTimeout(() => document.getElementById('alt-result').classList.add('visible'), 1400);
+}
+
+function advance() { if (currentStep < TOTAL_STEPS - 1) showStep(currentStep + 1); }
+function retreat() { if (currentStep > 0) showStep(currentStep - 1); }
+
+document.addEventListener('keydown', e => {
+  if (!document.getElementById('password-gate').classList.contains('hidden')) return;
+  if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') { e.preventDefault(); advance(); }
+  if (e.key === 'ArrowLeft') { e.preventDefault(); retreat(); }
+});
+
+// Password gate
+const GATE_CODE = 'defender';
+function checkGate() {
+  const input = document.getElementById('gate-input');
+  if (input.value.toLowerCase().trim() === GATE_CODE) {
+    localStorage.setItem('cd_access', '1');
+    document.getElementById('password-gate').classList.add('hidden');
+    showStep(0);
+  } else {
+    input.classList.add('shake');
+    input.value = '';
+    input.placeholder = 'Try again';
+    setTimeout(() => input.classList.remove('shake'), 400);
+  }
+}
+document.getElementById('gate-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') { e.stopPropagation(); checkGate(); }
+});
+
+var fd2 = document.getElementById('fork-drops');
+if (fd2) fd2.style.opacity = '0';
+if (localStorage.getItem('cd_access') === '1') {
+  document.getElementById('password-gate').classList.add('hidden');
+  showStep(0);
+} else {
+  document.getElementById('gate-input').focus();
+}
+</script>
+
+</body>
+</html>
