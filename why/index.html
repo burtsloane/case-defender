@@ -1,25 +1,532 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta http-equiv="refresh" content="0; url=../">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Redirecting to Case Defender</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&family=Spectral:wght@500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../assets/styles.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Citation Defender — Why This Matters</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0c0e1a; --bg-raised: #12152a; --bg-card: #161937;
+    --border: #252a4a; --border-subtle: #1e2240;
+    --text: #d8dae6; --text-dim: #8b90b4; --text-bright: #f0f1f7;
+    --serif: 'Cormorant Garamond', 'Georgia', serif;
+    --mono: 'JetBrains Mono', 'Menlo', monospace;
+    --gold: #e2b714; --blue: #60a5fa; --green: #4ade80;
+    --red: #e94560; --amber: #f59e0b; --yellow: #fbbf24;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: var(--serif); font-size: 16px; background: var(--bg); color: var(--text); line-height: 1.7; min-height: 100vh; overflow-x: hidden; }
+  body::before { content: ''; position: fixed; inset: 0; background: linear-gradient(rgba(37,42,74,0.12) 1px, transparent 1px), linear-gradient(90deg, rgba(37,42,74,0.12) 1px, transparent 1px); background-size: 48px 48px; pointer-events: none; z-index: 0; }
+
+  /* Gate */
+  #password-gate { position: fixed; inset: 0; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 500; padding: 32px; }
+  #password-gate.hidden { display: none; }
+  #password-gate h1 { font-family: var(--serif); font-size: 42px; font-weight: 700; color: var(--text-bright); margin-bottom: 8px; }
+  #password-gate .subtitle { font-family: var(--mono); font-size: 12px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-dim); margin-bottom: 40px; }
+  #password-gate .gate-form { display: flex; gap: 12px; }
+  #password-gate input { font-family: var(--mono); font-size: 15px; padding: 10px 20px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 4px; color: var(--text-bright); outline: none; width: 240px; }
+  #password-gate input:focus { border-color: var(--gold); }
+  #password-gate input.shake { animation: shake 0.4s ease; border-color: var(--red); }
+  #password-gate button { font-family: var(--mono); font-size: 13px; font-weight: 600; padding: 10px 24px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 4px; color: var(--text); cursor: pointer; }
+  #password-gate button:hover { border-color: var(--gold); color: var(--text-bright); }
+  #password-gate .gate-hint { font-family: var(--mono); font-size: 11px; color: var(--text-dim); margin-top: 16px; }
+  @keyframes shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 50% { transform: translateX(8px); } 75% { transform: translateX(-4px); } }
+
+  /* Main */
+  #main-content { display: none; position: relative; z-index: 1; max-width: 1040px; margin: 0 auto; padding: 40px 32px 80px; }
+  #main-content.visible { display: block; }
+  .back-link { font-family: var(--mono); font-size: 12px; color: var(--text-dim); text-decoration: none; display: inline-block; margin-bottom: 32px; }
+  .back-link:hover { color: var(--text-bright); }
+
+  /* Header */
+  .header { text-align: center; margin-bottom: 40px; }
+  .header h1 { font-family: var(--serif); font-size: clamp(28px, 4vw, 42px); font-weight: 700; color: var(--text-bright); margin-bottom: 12px; }
+  .header .subtitle { font-size: 18px; color: var(--text); font-style: italic; }
+
+  /* Case Selector Cards */
+  .case-selector { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 40px; }
+  .case-card {
+    background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 8px;
+    padding: 20px 16px; text-align: center; cursor: pointer; transition: all 0.3s;
+    position: relative; overflow: hidden;
+  }
+  .case-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+  .case-card:hover { background: var(--bg-raised); border-color: var(--border); transform: translateY(-2px); }
+  .case-card.active { border-color: var(--gold); box-shadow: 0 0 20px rgba(226, 183, 20, 0.15); }
+  .case-card.coming { opacity: 0.4; cursor: default; }
+  .case-card .case-name { font-family: var(--serif); font-size: 15px; font-weight: 600; color: var(--text-bright); margin-bottom: 6px; }
+  .case-card .case-year { font-family: var(--mono); font-size: 11px; color: var(--text-dim); margin-bottom: 8px; }
+  .case-card .case-consequence { font-family: var(--mono); font-size: 13px; font-weight: 700; }
+  .case-card .case-hook { font-size: 13px; color: var(--text-dim); margin-top: 8px; line-height: 1.4; }
+
+  .case-card:nth-child(1)::before { background: var(--red); }
+  .case-card:nth-child(1) .case-consequence { color: var(--red); }
+  .case-card:nth-child(2)::before { background: var(--amber); }
+  .case-card:nth-child(2) .case-consequence { color: var(--amber); }
+  .case-card:nth-child(3)::before { background: var(--blue); }
+  .case-card:nth-child(3) .case-consequence { color: var(--blue); }
+  .case-card:nth-child(4)::before { background: var(--text-dim); }
+  .case-card:nth-child(4) .case-consequence { color: var(--text-dim); }
+
+  /* Timeline (shared styles) */
+  .case-timeline { display: none; }
+  .case-timeline.active { display: block; }
+  .case-intro { margin-bottom: 32px; padding: 20px 24px; background: var(--bg-raised); border: 1px solid var(--border); border-radius: 6px; }
+  .case-intro .case-title-full { font-family: var(--serif); font-size: 20px; font-weight: 600; color: var(--text-bright); margin-bottom: 4px; }
+  .case-intro .case-court { font-family: var(--mono); font-size: 12px; color: var(--text-dim); margin-bottom: 12px; }
+  .case-intro .case-desc { font-size: 15px; color: var(--text); }
+
+  .stats-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 32px; }
+  .stat-card { background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 6px; padding: 16px; text-align: center; }
+  .stat-card .num { font-family: var(--mono); font-size: 24px; font-weight: 700; margin-bottom: 4px; }
+  .stat-card .label { font-family: var(--mono); font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--text-dim); }
+
+  .timeline-container { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; margin-bottom: 40px; }
+  .timeline-column { position: relative; }
+  .timeline-title { font-family: var(--mono); font-size: 13px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; text-align: center; padding: 10px 16px; border-radius: 6px; margin-bottom: 20px; }
+  .timeline-title.actual { color: var(--red); background: rgba(233,69,96,0.1); border: 1px solid rgba(233,69,96,0.3); }
+  .timeline-title.defended { color: var(--green); background: rgba(74,222,128,0.1); border: 1px solid rgba(74,222,128,0.3); }
+  .timeline-column::after { content: ''; position: absolute; left: 16px; top: 56px; bottom: 0; width: 2px; background: var(--border); }
+  .timeline-event { position: relative; padding: 0 0 20px 44px; }
+  .timeline-event::before { content: ''; position: absolute; left: 10px; top: 6px; width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--border); background: var(--bg); z-index: 1; }
+  .timeline-event.bad::before { border-color: var(--red); background: rgba(233,69,96,0.2); }
+  .timeline-event.good::before { border-color: var(--green); background: rgba(74,222,128,0.2); }
+  .timeline-event.neutral::before { border-color: var(--text-dim); }
+  .timeline-event.warn::before { border-color: var(--yellow); background: rgba(251,191,36,0.2); }
+  .timeline-event.catastrophe::before { border-color: var(--red); background: var(--red); }
+  .event-date { font-family: var(--mono); font-size: 11px; font-weight: 600; color: var(--text-dim); letter-spacing: 1px; margin-bottom: 3px; }
+  .event-title { font-family: var(--serif); font-size: 16px; font-weight: 600; color: var(--text-bright); margin-bottom: 3px; }
+  .event-detail { font-size: 14px; color: var(--text); line-height: 1.6; }
+  .event-detail strong { color: var(--text-bright); }
+  .event-detail .red { color: var(--red); font-weight: 600; }
+  .event-detail .green { color: var(--green); font-weight: 600; }
+  .event-detail .yellow { color: var(--yellow); font-weight: 600; }
+  .time-saved { font-family: var(--mono); font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; text-align: center; padding: 14px; border-radius: 6px; margin-top: 8px; }
+  .time-saved.bad { color: var(--red); background: rgba(233,69,96,0.08); border: 1px solid rgba(233,69,96,0.2); }
+  .time-saved.good { color: var(--green); background: rgba(74,222,128,0.08); border: 1px solid rgba(74,222,128,0.2); }
+
+  /* Closing */
+  .closing { text-align: center; padding: 32px 0; border-top: 1px solid var(--border-subtle); }
+  .closing blockquote { font-family: var(--serif); font-size: clamp(18px, 2.5vw, 26px); font-weight: 600; font-style: italic; color: var(--text-bright); line-height: 1.5; max-width: 700px; margin: 0 auto 20px; }
+  .closing .levels { display: flex; justify-content: center; gap: 20px; margin-bottom: 24px; flex-wrap: wrap; }
+  .closing .level-card { background: rgba(0,0,0,0.2); border: 1px solid; border-radius: 4px; padding: 12px 20px; text-align: center; }
+  .closing .note { font-family: var(--mono); font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-dim); }
+
+  @media (max-width: 768px) {
+    .case-selector { grid-template-columns: 1fr 1fr; }
+    .timeline-container { grid-template-columns: 1fr; }
+    .stats-bar { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
 </head>
 <body>
-  <div class="site-shell">
-    <div class="container">
-      <div class="redirect-note">
-        <div class="eyebrow">Redirecting</div>
-        <h1>Case Defender</h1>
-        <p>The public entry now lives on the homepage.</p>
-        <p><a class="button primary" href="../">Go to homepage</a></p>
+
+<div id="password-gate">
+  <h1>Citation Defender</h1>
+  <div class="subtitle">Confidential Preview</div>
+  <div class="gate-form">
+    <input type="password" id="gate-input" placeholder="Access code" autocomplete="off">
+    <button onclick="checkGate()">Enter</button>
+  </div>
+  <div class="gate-hint">Contact presenter for access</div>
+</div>
+
+<div id="main-content">
+  <a href="./" class="back-link">&larr; Case Defender</a>
+
+  <div class="header">
+    <h1>Why Citation Defender Exists</h1>
+    <div class="subtitle">Real cases. Real sanctions. Real damage that didn't have to happen.</div>
+  </div>
+
+  <!-- Case Selector -->
+  <div class="case-selector">
+    <div class="case-card active" onclick="showCase('mata')">
+      <div class="case-name">Mata v. Avianca</div>
+      <div class="case-year">S.D.N.Y. 2023</div>
+      <div class="case-consequence">$5,000 fine</div>
+      <div class="case-hook">6 fake citations from ChatGPT. The case that started it all.</div>
+    </div>
+    <div class="case-card" onclick="showCase('couvrette')">
+      <div class="case-name">Couvrette v. Wisnovsky</div>
+      <div class="case-year">D. Or. 2025</div>
+      <div class="case-consequence">$109,700</div>
+      <div class="case-hook">15 fake citations + 8 fabricated quotes on real sources. $94K in fees to the other side.</div>
+    </div>
+    <div class="case-card" onclick="showCase('crabill')">
+      <div class="case-name">People v. Crabill</div>
+      <div class="case-year">Colorado 2023</div>
+      <div class="case-consequence">Suspended</div>
+      <div class="case-hook">3 fake citations. Lied to the judge. First AI attorney suspension in Colorado.</div>
+    </div>
+    <div class="case-card coming">
+      <div class="case-name">More Cases</div>
+      <div class="case-year">Coming</div>
+      <div class="case-consequence">&mdash;</div>
+      <div class="case-hook">1,275+ sanctions and counting.</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- MATA v. AVIANCA                         -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="case-timeline active" id="case-mata">
+    <div class="case-intro">
+      <div class="case-title-full">Mata v. Avianca, Inc., No. 22-cv-1461 (S.D.N.Y. 2023)</div>
+      <div class="case-court">Hon. P. Kevin Castel &middot; Southern District of New York</div>
+      <div class="case-desc">Personal injury suit against an airline. Attorney Steven Schwartz used ChatGPT to research an opposition brief to a forum non conveniens motion. ChatGPT generated six entirely fabricated case citations. Schwartz asked ChatGPT to verify them — it confirmed they were real.</div>
+    </div>
+
+    <div class="stats-bar">
+      <div class="stat-card"><div class="num" style="color:var(--red)">6</div><div class="label">Fake Citations</div></div>
+      <div class="stat-card"><div class="num" style="color:var(--red)">113</div><div class="label">Days to Sanctions</div></div>
+      <div class="stat-card"><div class="num" style="color:var(--amber)">$5,000</div><div class="label">Fine</div></div>
+      <div class="stat-card"><div class="num" style="color:var(--red)">30 yrs</div><div class="label">Attorney Experience</div></div>
+    </div>
+
+    <div class="timeline-container">
+      <div class="timeline-column">
+        <div class="timeline-title actual">What Happened</div>
+        <div class="timeline-event neutral">
+          <div class="event-date">Early 2023</div>
+          <div class="event-title">Attorney Researches Brief</div>
+          <div class="event-detail">Steven Schwartz (30 years experience) uses ChatGPT to find cases for an opposition brief.</div>
+        </div>
+        <div class="timeline-event bad">
+          <div class="event-date">ChatGPT Responds</div>
+          <div class="event-title">Six Fabricated Citations</div>
+          <div class="event-detail"><span class="red">Varghese v. China Southern, Shaboon v. Egyptair, Petersen v. Iran Air, Martinez v. Delta, Estate of Durden v. KLM, Miller v. United Airlines.</span> All fake.</div>
+        </div>
+        <div class="timeline-event bad">
+          <div class="event-date">Verification</div>
+          <div class="event-title">ChatGPT Confirms Its Own Fakes</div>
+          <div class="event-detail">ChatGPT says they're real. <span class="red">Never checked Westlaw or Lexis.</span></div>
+        </div>
+        <div class="timeline-event catastrophe">
+          <div class="event-date">March 1, 2023</div>
+          <div class="event-title">Brief Filed</div>
+          <div class="event-detail">Six nonexistent cases submitted to a federal judge.</div>
+        </div>
+        <div class="timeline-event bad">
+          <div class="event-date">Spring 2023</div>
+          <div class="event-title">Opposing Counsel Flags It</div>
+          <div class="event-detail">Can't find the cases. Notifies the court.</div>
+        </div>
+        <div class="timeline-event catastrophe">
+          <div class="event-date">May 4, 2023</div>
+          <div class="event-title">Admits ChatGPT Was the Source</div>
+          <div class="event-detail">Affidavit filed. "Bogus judicial decisions with bogus quotes."</div>
+        </div>
+        <div class="timeline-event catastrophe">
+          <div class="event-date">June 22, 2023</div>
+          <div class="event-title">$5,000 Sanctions</div>
+          <div class="event-detail"><span class="red">Fined. Required to notify judges named in the fakes.</span></div>
+        </div>
+        <div class="time-saved bad">113 days. Careers damaged. Client harmed.</div>
+      </div>
+
+      <div class="timeline-column">
+        <div class="timeline-title defended">With Citation Defender</div>
+        <div class="timeline-event neutral">
+          <div class="event-date">Early 2023</div>
+          <div class="event-title">Attorney Researches Brief</div>
+          <div class="event-detail">Same starting point. Same ChatGPT workflow.</div>
+        </div>
+        <div class="timeline-event bad">
+          <div class="event-date">ChatGPT Responds</div>
+          <div class="event-title">Six Fabricated Citations</div>
+          <div class="event-detail">Same six fakes. <span class="yellow">This is where the story changes.</span></div>
+        </div>
+        <div class="timeline-event good">
+          <div class="event-date">Before Filing</div>
+          <div class="event-title">Citation Defender Scans the Brief</div>
+          <div class="event-detail">
+            <span class="red">&#10007; Varghese v. China Southern — NOT FOUND</span><br>
+            <span class="red">&#10007; Shaboon v. Egyptair — NOT FOUND</span><br>
+            <span class="red">&#10007; Petersen v. Iran Air — NOT FOUND</span><br>
+            <span class="red">&#10007; Martinez v. Delta — NOT FOUND</span><br>
+            <span class="red">&#10007; Durden v. KLM — NOT FOUND</span><br>
+            <span class="red">&#10007; Miller v. United — NOT FOUND</span>
+          </div>
+        </div>
+        <div class="timeline-event good">
+          <div class="event-date">Same Day</div>
+          <div class="event-title">Fakes Removed, Replacements Found</div>
+          <div class="event-detail">Including <strong>Piper Aircraft v. Reyno</strong> — the leading forum non conveniens authority.</div>
+        </div>
+        <div class="timeline-event warn">
+          <div class="event-date">Level 3 Scan</div>
+          <div class="event-title">Adversarial Risk on Piper v. Reyno</div>
+          <div class="event-detail"><span class="yellow">CITE WITH CAUTION:</span> Piper supports "defer to plaintiff's forum choice" — but also holds deference is <strong>reduced for foreign plaintiffs</strong>. Mata is Colombian. Opposing counsel will use this.</div>
+        </div>
+        <div class="timeline-event good">
+          <div class="event-date">March 1, 2023</div>
+          <div class="event-title">Stronger Brief Filed</div>
+          <div class="event-detail"><span class="green">No fakes. No adversarial exposure. Strategically sound.</span></div>
+        </div>
+        <div class="time-saved good">Caught before filing. Zero damage. Stronger brief.</div>
       </div>
     </div>
   </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- COUVRETTE v. WISNOVSKY                  -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="case-timeline" id="case-couvrette">
+    <div class="case-intro">
+      <div class="case-title-full">Couvrette v. Wisnovsky, No. 1:21-cv-00157 (D. Or. 2025)</div>
+      <div class="case-court">Magistrate Judge Mark D. Clarke &middot; District of Oregon, Medford Division</div>
+      <div class="case-desc">Family dispute over Valley View Winery. Pro hac vice counsel Brigandi filed three briefs over five months containing 15 fabricated case citations and 8 fabricated quotations falsely attributed to real authorities. The court struck all briefs and dismissed the case with prejudice. The real cost: <strong>$94,704 in attorney fees</strong> charged to the opposing party.</div>
+    </div>
+
+    <div class="stats-bar">
+      <div class="stat-card"><div class="num" style="color:var(--red)">15</div><div class="label">Fake Citations</div></div>
+      <div class="stat-card"><div class="num" style="color:var(--amber)">8</div><div class="label">Fake Quotes on Real Sources</div></div>
+      <div class="stat-card"><div class="num" style="color:var(--red)">$109,700</div><div class="label">Total Sanctions</div></div>
+      <div class="stat-card"><div class="num" style="color:var(--red)">$94,704</div><div class="label">Fees Paid by Other Side</div></div>
+    </div>
+
+    <div class="timeline-container">
+      <div class="timeline-column">
+        <div class="timeline-title actual">What Happened</div>
+        <div class="timeline-event neutral">
+          <div class="event-date">January 2025</div>
+          <div class="event-title">Summary Judgment Briefs Due</div>
+          <div class="event-detail">Pro hac vice counsel Brigandi uses AI to draft cross-motions for summary judgment in a family winery dispute.</div>
+        </div>
+        <div class="timeline-event bad">
+          <div class="event-date">Jan 31, 2025 — Brief #1</div>
+          <div class="event-title">2 Fake Citations Filed</div>
+          <div class="event-detail"><span class="red">First brief contains 2 nonexistent cases.</span> Local counsel Murphy signs without verifying.</div>
+        </div>
+        <div class="timeline-event bad">
+          <div class="event-date">Apr 4, 2025 — Brief #2</div>
+          <div class="event-title">7 More Fake Citations</div>
+          <div class="event-detail"><span class="red">Response brief adds 7 more fabricated cases.</span> Pattern continues undetected.</div>
+        </div>
+        <div class="timeline-event catastrophe">
+          <div class="event-date">May 2, 2025 — Brief #3</div>
+          <div class="event-title">6 Fake Citations + 8 Fabricated Quotes</div>
+          <div class="event-detail"><span class="red">Reply brief adds 6 more fake cases AND 8 fabricated quotations pinned on real authorities</span> — including a fake quote attributed to Restatement (Second) of Contracts &sect;2.</div>
+        </div>
+        <div class="timeline-event bad">
+          <div class="event-date">The "Fix"</div>
+          <div class="event-title">Brigandi Removes Quotation Marks</div>
+          <div class="event-detail">Instead of removing the fake quotes, Brigandi <span class="red">removes the quotation marks</span> — making fabricated text look like paraphrasing. The false attributions remain.</div>
+        </div>
+        <div class="timeline-event catastrophe">
+          <div class="event-date">December 12, 2025</div>
+          <div class="event-title">$15,500 Fine + All Briefs Struck</div>
+          <div class="event-detail">$500 per fake citation &times; 15 + $1,000 per fake quote &times; 8. All briefs struck without leave to refile. <span class="red">Case dismissed with prejudice.</span></div>
+        </div>
+        <div class="timeline-event catastrophe">
+          <div class="event-date">March 2026</div>
+          <div class="event-title">$94,704 in Attorney Fees</div>
+          <div class="event-detail">Opposing counsel bills for summary judgment AND sanctions briefing. Murphy (local counsel) pays 15%: <span class="red">$14,205.</span> Referral to Oregon State Bar.</div>
+        </div>
+        <div class="time-saved bad">5 months. 3 briefs. 23 violations. $109,700.<br>Case dismissed. Client loses everything.</div>
+      </div>
+
+      <div class="timeline-column">
+        <div class="timeline-title defended">With Citation Defender</div>
+        <div class="timeline-event neutral">
+          <div class="event-date">January 2025</div>
+          <div class="event-title">Summary Judgment Briefs Due</div>
+          <div class="event-detail">Same starting point. Same AI-assisted drafting.</div>
+        </div>
+        <div class="timeline-event good">
+          <div class="event-date">Before Brief #1</div>
+          <div class="event-title">Citation Defender Scans — Level 1</div>
+          <div class="event-detail"><span class="red">&#10007; 2 citations — NOT FOUND</span><br><span class="green">Caught on the first brief. Pattern stopped before it starts.</span></div>
+        </div>
+        <div class="timeline-event good">
+          <div class="event-date">Attorney Replaces Citations</div>
+          <div class="event-title">Real Cases Found and Verified</div>
+          <div class="event-detail">Replacement citations pass Level 1 (existence) and Level 2 (argument fit).</div>
+        </div>
+        <div class="timeline-event warn">
+          <div class="event-date">Level 2 + Level 3 Scan</div>
+          <div class="event-title">Fabricated Quotes Would Never Happen</div>
+          <div class="event-detail"><span class="yellow">Level 2 (Argument Fit)</span> checks whether the cited source actually says what the brief claims. Fabricated quotations attributed to the Restatement or real cases are caught — <strong>the quote doesn't match the source.</strong> This is the attack vector that no existence checker catches.</div>
+        </div>
+        <div class="timeline-event good">
+          <div class="event-date">Jan 31, 2025</div>
+          <div class="event-title">Clean Brief Filed</div>
+          <div class="event-detail"><span class="green">Real citations. Verified quotes. No fabrications.</span></div>
+        </div>
+        <div class="timeline-event good">
+          <div class="event-date">Briefs #2 and #3</div>
+          <div class="event-title">Same Process, Same Protection</div>
+          <div class="event-detail">Each subsequent brief scanned before filing. <span class="green">The 5-month pattern of accumulating fake citations never begins.</span></div>
+        </div>
+        <div class="timeline-event good">
+          <div class="event-date">Outcome</div>
+          <div class="event-title">Case Decided on the Merits</div>
+          <div class="event-detail"><span class="green">No sanctions. No struck briefs. No $94K in fees. No Oregon State Bar referral. Case proceeds normally.</span></div>
+        </div>
+        <div class="time-saved good">All 23 violations caught before the first brief was filed.<br>$109,700 saved. Client's case survives.</div>
+      </div>
+    </div>
+
+    <div style="text-align:center; padding: 16px; background: var(--bg-raised); border: 1px solid var(--border); border-radius: 6px; margin-bottom: 24px;">
+      <div style="font-family:var(--mono); font-size: 13px; color: var(--text-bright); font-weight: 600; margin-bottom: 8px;">The Real Cost of Couvrette</div>
+      <div style="font-size: 15px; color: var(--text);">The attorney who filed bad citations paid <span style="color:var(--red); font-weight:600;">$15,500</span>. The attorneys who had to <em>prove</em> they were bad paid <span style="color:var(--red); font-weight:600;">$94,704</span>.<br>Citation Defender eliminates both costs.</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- PEOPLE v. CRABILL                       -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="case-timeline" id="case-crabill">
+    <div class="case-intro">
+      <div class="case-title-full">People v. Crabill (Colorado 2023)</div>
+      <div class="case-court">Presiding Disciplinary Judge Bryon M. Large &middot; Colorado</div>
+      <div class="case-desc">Attorney Zachariah Crabill used ChatGPT to draft a motion to set aside judgment in a car sale dispute — his first time writing such a motion. Three entirely fabricated Colorado cases. When the judge discovered them at the hearing, Crabill lied and blamed "a legal intern." First AI-related attorney suspension in Colorado.</div>
+    </div>
+
+    <div class="stats-bar">
+      <div class="stat-card"><div class="num" style="color:var(--blue)">3</div><div class="label">Fake Citations</div></div>
+      <div class="stat-card"><div class="num" style="color:var(--red)">1 yr + 1 day</div><div class="label">Suspension</div></div>
+      <div class="stat-card"><div class="num" style="color:var(--amber)">90 days</div><div class="label">Served Immediately</div></div>
+      <div class="stat-card"><div class="num" style="color:var(--red)">4</div><div class="label">Ethics Violations</div></div>
+    </div>
+
+    <div class="timeline-container">
+      <div class="timeline-column">
+        <div class="timeline-title actual">What Happened</div>
+        <div class="timeline-event neutral">
+          <div class="event-date">April 2023</div>
+          <div class="event-title">First Time Writing This Motion</div>
+          <div class="event-detail">Crabill takes on a car repossession case. Has never drafted a motion to set aside judgment before. Uses ChatGPT.</div>
+        </div>
+        <div class="timeline-event bad">
+          <div class="event-date">May 4, 2023</div>
+          <div class="event-title">Three Fabricated Citations Filed</div>
+          <div class="event-detail"><span class="red">Zerbi v. Colorado Div. of Employment, In re Marriage of McQueen, People v. Hall</span> — all entirely invented Colorado Court of Appeals decisions.</div>
+        </div>
+        <div class="timeline-event catastrophe">
+          <div class="event-date">May 5, 2023 — Morning</div>
+          <div class="event-title">"I Think All My Case Cites Are Garbage"</div>
+          <div class="event-detail">Texts his paralegal the morning of the hearing. <span class="red">Goes to court anyway.</span></div>
+        </div>
+        <div class="timeline-event catastrophe">
+          <div class="event-date">May 5, 2023 — Hearing</div>
+          <div class="event-title">Lies to the Judge</div>
+          <div class="event-detail">Judge Bentley identifies the nonexistent cases. Crabill <span class="red">blames "a legal intern."</span> Later says he "panicked."</div>
+        </div>
+        <div class="timeline-event bad">
+          <div class="event-date">Six Days Later</div>
+          <div class="event-title">Admits ChatGPT</div>
+          <div class="event-detail">Files affidavit admitting AI use. Files corrected motion (which is denied anyway).</div>
+        </div>
+        <div class="timeline-event catastrophe">
+          <div class="event-date">November 22, 2023</div>
+          <div class="event-title">Suspended — 4 Ethics Violations</div>
+          <div class="event-detail">Competence (1.1), Diligence (1.3), False statements to tribunal (3.3), Dishonesty (8.4). <span class="red">90 days immediate + 2 years probation.</span> First AI suspension in Colorado.</div>
+        </div>
+        <div class="time-saved bad">Career suspended. Trust destroyed.<br>The lie was worse than the fake citations.</div>
+      </div>
+
+      <div class="timeline-column">
+        <div class="timeline-title defended">With Citation Defender</div>
+        <div class="timeline-event neutral">
+          <div class="event-date">April 2023</div>
+          <div class="event-title">Same Starting Point</div>
+          <div class="event-detail">Same inexperience. Same ChatGPT workflow. Same three fake citations generated.</div>
+        </div>
+        <div class="timeline-event good">
+          <div class="event-date">Before Filing</div>
+          <div class="event-title">Citation Defender Scans</div>
+          <div class="event-detail">
+            <span class="red">&#10007; Zerbi v. Colorado Div. — NOT FOUND</span><br>
+            <span class="red">&#10007; In re Marriage of McQueen — NOT FOUND</span><br>
+            <span class="red">&#10007; People v. Hall — NOT FOUND</span>
+          </div>
+        </div>
+        <div class="timeline-event good">
+          <div class="event-date">Same Day</div>
+          <div class="event-title">Attorney Finds Real Authority</div>
+          <div class="event-detail"><span class="green">Researches verified cases for setting aside judgment under Colorado rules.</span> Files a motion supported by real law.</div>
+        </div>
+        <div class="timeline-event good">
+          <div class="event-date">May 5, 2023</div>
+          <div class="event-title">Normal Hearing</div>
+          <div class="event-detail"><span class="green">Motion argued on the merits. No fake citations. No panic. No lie. No disciplinary referral.</span></div>
+        </div>
+        <div class="time-saved good">Three fakes caught. No hearing disaster.<br>No lie. No suspension. Career intact.</div>
+      </div>
+    </div>
+
+    <div style="text-align:center; padding: 16px; background: var(--bg-raised); border: 1px solid var(--border); border-radius: 6px; margin-bottom: 24px;">
+      <div style="font-family:var(--mono); font-size: 13px; color: var(--text-bright); font-weight: 600; margin-bottom: 8px;">The Lesson from Crabill</div>
+      <div style="font-size: 15px; color: var(--text);">The fake citations cost him 90 days. <span style="color:var(--red); font-weight:600;">The lie cost him a year.</span><br>Citation Defender prevents the first mistake. The second mistake never happens.</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- CLOSING (always visible)                -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="closing">
+    <blockquote>
+      "The market solved existence checking. Nobody solved what happens when the citation is real, accurate, and still hands ammunition to the other side."
+    </blockquote>
+    <div class="levels">
+      <div class="level-card" style="border-color: rgba(233,69,96,0.4);">
+        <div style="font-family:var(--mono); font-size: 13px; font-weight: 700; color: var(--red);">Level 1: Existence</div>
+        <div style="font-size: 13px; color: var(--text-dim); margin-top: 4px;">Catches the fakes</div>
+        <div style="font-family:var(--mono); font-size: 11px; color: var(--text-dim); margin-top: 4px;">Others do this</div>
+      </div>
+      <div class="level-card" style="border-color: rgba(96,165,250,0.4);">
+        <div style="font-family:var(--mono); font-size: 13px; font-weight: 700; color: var(--blue);">Level 2: Argument Fit</div>
+        <div style="font-size: 13px; color: var(--text-dim); margin-top: 4px;">Catches fabricated quotes</div>
+        <div style="font-family:var(--mono); font-size: 11px; color: var(--gold); margin-top: 4px;">Citation Defender</div>
+      </div>
+      <div class="level-card" style="border-color: rgba(251,191,36,0.4);">
+        <div style="font-family:var(--mono); font-size: 13px; font-weight: 700; color: var(--yellow);">Level 3: Adversarial Risk</div>
+        <div style="font-size: 13px; color: var(--text-dim); margin-top: 4px;">Catches the dangerous real ones</div>
+        <div style="font-family:var(--mono); font-size: 11px; color: var(--gold); margin-top: 4px;">Only Citation Defender</div>
+      </div>
+    </div>
+    <div class="note">Patent Pending</div>
+  </div>
+
+</div>
+
+<script>
+const GATE_CODE = 'defender';
+function checkGate() {
+  const input = document.getElementById('gate-input');
+  if (input.value.toLowerCase().trim() === GATE_CODE) {
+    localStorage.setItem('cd_access', '1');
+    document.getElementById('password-gate').classList.add('hidden');
+    document.getElementById('main-content').classList.add('visible');
+  } else {
+    input.classList.add('shake');
+    input.value = '';
+    input.placeholder = 'Try again';
+    setTimeout(() => input.classList.remove('shake'), 400);
+  }
+}
+document.getElementById('gate-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') { e.stopPropagation(); checkGate(); }
+});
+if (localStorage.getItem('cd_access') === '1') {
+  document.getElementById('password-gate').classList.add('hidden');
+  document.getElementById('main-content').classList.add('visible');
+} else {
+  document.getElementById('gate-input').focus();
+}
+
+function showCase(id) {
+  document.querySelectorAll('.case-timeline').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.case-card').forEach(c => c.classList.remove('active'));
+  document.getElementById('case-' + id).classList.add('active');
+  event.currentTarget.classList.add('active');
+}
+</script>
+
 </body>
 </html>
