@@ -18,9 +18,7 @@
     --red: #e94560; --amber: #f59e0b; --yellow: #fbbf24;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body {   font-family: 'Inter', system-ui, sans-serif;
-  font-size: 32px;
-  background: var(--bg); color: var(--text); line-height: 1.7; min-height: 100vh; overflow-x: hidden; }
+  body { font-family: var(--serif); font-size: 16px; background: var(--bg); color: var(--text); line-height: 1.7; min-height: 100vh; overflow-x: hidden; }
   body::before { content: ''; position: fixed; inset: 0; background: linear-gradient(rgba(37,42,74,0.12) 1px, transparent 1px), linear-gradient(90deg, rgba(37,42,74,0.12) 1px, transparent 1px); background-size: 48px 48px; pointer-events: none; z-index: 0; }
 
   /* Gate */
@@ -40,8 +38,8 @@
   /* Main */
   #main-content { display: none; position: relative; z-index: 1; max-width: 1040px; margin: 0 auto; padding: 40px 32px 80px; }
   #main-content.visible { display: block; }
-  /* .back-link { font-family: var(--mono); font-size: 12px; color: var(--text-dim); text-decoration: none; display: inline-block; margin-bottom: 32px; }
-  .back-link:hover { color: var(--text-bright); } */
+  .back-link { font-family: var(--mono); font-size: 12px; color: var(--text-dim); text-decoration: none; display: inline-block; margin-bottom: 32px; }
+  .back-link:hover { color: var(--text-bright); }
 
   /* Header */
   .header { text-align: center; margin-bottom: 40px; }
@@ -59,10 +57,10 @@
   .case-card:hover { background: var(--bg-raised); border-color: var(--border); transform: translateY(-2px); }
   .case-card.active { border-color: var(--gold); box-shadow: 0 0 20px rgba(226, 183, 20, 0.15); }
   .case-card.coming { opacity: 0.4; cursor: default; }
-  .case-card .case-name { font-family: var(--serif); font-size: 28px; font-weight: 600; color: var(--text-bright); margin-bottom: 6px; }
-  .case-card .case-year { font-family: var(--mono); font-size: 14px; color: var(--text-dim); margin-bottom: 8px; }
-  .case-card .case-consequence { font-family: var(--mono); font-size: 14px; font-weight: 700; }
-  .case-card .case-hook { font-size: 14px; color: var(--text-dim); margin-top: 8px; line-height: 1.4; }
+  .case-card .case-name { font-family: var(--serif); font-size: 15px; font-weight: 600; color: var(--text-bright); margin-bottom: 6px; }
+  .case-card .case-year { font-family: var(--mono); font-size: 11px; color: var(--text-dim); margin-bottom: 8px; }
+  .case-card .case-consequence { font-family: var(--mono); font-size: 13px; font-weight: 700; }
+  .case-card .case-hook { font-size: 13px; color: var(--text-dim); margin-top: 8px; line-height: 1.4; }
 
   .case-card:nth-child(1)::before { background: var(--red); }
   .case-card:nth-child(1) .case-consequence { color: var(--red); }
@@ -77,18 +75,18 @@
   .case-timeline { display: none; }
   .case-timeline.active { display: block; }
   .case-intro { margin-bottom: 32px; padding: 20px 24px; background: var(--bg-raised); border: 1px solid var(--border); border-radius: 6px; }
-  .case-intro .case-title-full { font-family: var(--serif); font-size: 32px; font-weight: 600; color: var(--text-bright); margin-bottom: 4px; }
-  .case-intro .case-court { font-family: var(--mono); font-size: 14px; color: var(--text-dim); margin-bottom: 12px; }
-  .case-intro .case-desc { font-size: 18px; color: var(--text); }
+  .case-intro .case-title-full { font-family: var(--serif); font-size: 20px; font-weight: 600; color: var(--text-bright); margin-bottom: 4px; }
+  .case-intro .case-court { font-family: var(--mono); font-size: 12px; color: var(--text-dim); margin-bottom: 12px; }
+  .case-intro .case-desc { font-size: 15px; color: var(--text); }
 
   .stats-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 32px; }
   .stat-card { background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 6px; padding: 16px; text-align: center; }
   .stat-card .num { font-family: var(--mono); font-size: 24px; font-weight: 700; margin-bottom: 4px; }
-  .stat-card .label { font-family: var(--mono); font-size: 16px; letter-spacing: 1px; text-transform: uppercase; color: var(--text-dim); }
+  .stat-card .label { font-family: var(--mono); font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--text-dim); }
 
   .timeline-container { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; margin-bottom: 40px; }
   .timeline-column { position: relative; }
-  .timeline-title { font-family: var(--mono); font-size: 17px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; text-align: center; padding: 10px 16px; border-radius: 6px; margin-bottom: 20px; }
+  .timeline-title { font-family: var(--mono); font-size: 13px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; text-align: center; padding: 10px 16px; border-radius: 6px; margin-bottom: 20px; }
   .timeline-title.actual { color: var(--red); background: rgba(233,69,96,0.1); border: 1px solid rgba(233,69,96,0.3); }
   .timeline-title.defended { color: var(--green); background: rgba(74,222,128,0.1); border: 1px solid rgba(74,222,128,0.3); }
   .timeline-column::after { content: ''; position: absolute; left: 16px; top: 56px; bottom: 0; width: 2px; background: var(--border); }
@@ -99,23 +97,23 @@
   .timeline-event.neutral::before { border-color: var(--text-dim); }
   .timeline-event.warn::before { border-color: var(--yellow); background: rgba(251,191,36,0.2); }
   .timeline-event.catastrophe::before { border-color: var(--red); background: var(--red); }
-  .event-date { font-family: var(--mono); font-size: 16px; font-weight: 600; color: var(--text-dim); letter-spacing: 1px; margin-bottom: 3px; }
+  .event-date { font-family: var(--mono); font-size: 11px; font-weight: 600; color: var(--text-dim); letter-spacing: 1px; margin-bottom: 3px; }
   .event-title { font-family: var(--serif); font-size: 16px; font-weight: 600; color: var(--text-bright); margin-bottom: 3px; }
   .event-detail { font-size: 14px; color: var(--text); line-height: 1.6; }
   .event-detail strong { color: var(--text-bright); }
   .event-detail .red { color: var(--red); font-weight: 600; }
   .event-detail .green { color: var(--green); font-weight: 600; }
   .event-detail .yellow { color: var(--yellow); font-weight: 600; }
-  .time-saved { font-family: var(--mono); font-size: 14px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; text-align: center; padding: 14px; border-radius: 6px; margin-top: 8px; }
+  .time-saved { font-family: var(--mono); font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; text-align: center; padding: 14px; border-radius: 6px; margin-top: 8px; }
   .time-saved.bad { color: var(--red); background: rgba(233,69,96,0.08); border: 1px solid rgba(233,69,96,0.2); }
   .time-saved.good { color: var(--green); background: rgba(74,222,128,0.08); border: 1px solid rgba(74,222,128,0.2); }
 
   /* Closing */
   .closing { text-align: center; padding: 32px 0; border-top: 1px solid var(--border-subtle); }
-  .closing blockquote { font-family: var(--serif); font-size: clamp(24px, 2.5vw, 32px); font-weight: 600; font-style: italic; color: var(--text-bright); line-height: 1.5; max-width: 700px; margin: 0 auto 20px; }
+  .closing blockquote { font-family: var(--serif); font-size: clamp(18px, 2.5vw, 26px); font-weight: 600; font-style: italic; color: var(--text-bright); line-height: 1.5; max-width: 700px; margin: 0 auto 20px; }
   .closing .levels { display: flex; justify-content: center; gap: 20px; margin-bottom: 24px; flex-wrap: wrap; }
   .closing .level-card { background: rgba(0,0,0,0.2); border: 1px solid; border-radius: 4px; padding: 12px 20px; text-align: center; }
-  .closing .note { font-family: var(--mono); font-size: 18px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-dim); }
+  .closing .note { font-family: var(--mono); font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-dim); }
 
   @media (max-width: 768px) {
     .case-selector { grid-template-columns: 1fr 1fr; }
@@ -137,7 +135,7 @@
 </div>
 
 <div id="main-content">
-  <!-- <a href="./" class="back-link">&larr; Case Defender</a> -->
+  <a href="./" class="back-link">&larr; Case Defender</a>
 
   <div class="header">
     <h1>Why Citation Defender Exists</h1>
@@ -164,11 +162,11 @@
       <div class="case-consequence">Suspended</div>
       <div class="case-hook">3 fake citations. Lied to the judge. First AI attorney suspension in Colorado.</div>
     </div>
-    <div class="case-card coming">
-      <div class="case-name">More Cases</div>
-      <div class="case-year">Coming</div>
-      <div class="case-consequence">&mdash;</div>
-      <div class="case-hook">1,275+ sanctions and counting.</div>
+    <div class="case-card" onclick="showCase('mattox')">
+      <div class="case-name">Mattox v. Product Innovations</div>
+      <div class="case-year">E.D. Okla. 2025</div>
+      <div class="case-consequence">$29,496</div>
+      <div class="case-hook">14 fakes + 14 real cases with fabricated holdings. Chimera citations. 4 attorneys sanctioned.</div>
     </div>
   </div>
 
@@ -374,8 +372,8 @@
     </div>
 
     <div style="text-align:center; padding: 16px; background: var(--bg-raised); border: 1px solid var(--border); border-radius: 6px; margin-bottom: 24px;">
-      <div style="font-family:var(--mono); font-size: 16px; color: var(--text-bright); font-weight: 600; margin-bottom: 8px;">The Real Cost of Couvrette</div>
-      <div style="font-size: 18px; color: var(--text);">The attorney who filed bad citations paid <span style="color:var(--red); font-weight:600;">$15,500</span>. The attorneys who had to <em>prove</em> they were bad paid <span style="color:var(--red); font-weight:600;">$94,704</span>.<br>Citation Defender eliminates both costs.</div>
+      <div style="font-family:var(--mono); font-size: 13px; color: var(--text-bright); font-weight: 600; margin-bottom: 8px;">The Real Cost of Couvrette</div>
+      <div style="font-size: 15px; color: var(--text);">The attorney who filed bad citations paid <span style="color:var(--red); font-weight:600;">$15,500</span>. The attorneys who had to <em>prove</em> they were bad paid <span style="color:var(--red); font-weight:600;">$94,704</span>.<br>Citation Defender eliminates both costs.</div>
     </div>
   </div>
 
@@ -469,6 +467,102 @@
   </div>
 
   <!-- ═══════════════════════════════════════ -->
+  <!-- MATTOX v. PRODUCT INNOVATIONS           -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="case-timeline" id="case-mattox">
+    <div class="case-intro">
+      <div class="case-title-full">Mattox v. Product Innovations Research, No. 6:24-cv-00235 (E.D. Okla. 2025)</div>
+      <div class="case-court">Magistrate Judge Jason A. Robertson &middot; Eastern District of Oklahoma</div>
+      <div class="case-desc">Product liability case against a personal care product manufacturer. Attorney Howle used ChatGPT "to make his writing more persuasive" — it changed his citations and he never verified them. Across <strong>11 pleadings</strong>: 14 completely fabricated cases, 14 real cases with fabricated holdings, and a new attack vector — <strong>chimera citations</strong> that splice real reporter numbers with fake case names.</div>
+    </div>
+
+    <div class="stats-bar">
+      <div class="stat-card"><div class="num" style="color:var(--red)">14</div><div class="label">Fake Citations</div></div>
+      <div class="stat-card"><div class="num" style="color:var(--amber)">14</div><div class="label">Real Cases, Fake Holdings</div></div>
+      <div class="stat-card"><div class="num" style="color:var(--red)">$29,496</div><div class="label">Total Sanctions</div></div>
+      <div class="stat-card"><div class="num" style="color:var(--red)">4</div><div class="label">Attorneys Sanctioned</div></div>
+    </div>
+
+    <div class="timeline-container">
+      <div class="timeline-column">
+        <div class="timeline-title actual">What Happened</div>
+        <div class="timeline-event neutral">
+          <div class="event-date">2024</div>
+          <div class="event-title">Product Liability Case Filed</div>
+          <div class="event-detail">Mattox sues over a personal care product. Attorney Howle uses ChatGPT "to make his writing more persuasive." It changes his citations. <span class="red">He never verifies them.</span></div>
+        </div>
+        <div class="timeline-event bad">
+          <div class="event-date">11 Pleadings Filed</div>
+          <div class="event-title">14 Completely Fabricated Citations</div>
+          <div class="event-detail"><span class="red">Williams v. Borden, Case v. Fiberboard, Brown v. Crown Equipment, Austin v. Ohio Casualty, Lash v. Hollis, Creech v. Melton, F.D.I.C. v. Daily, White v. Deer &amp; Co., Morris v. Travelers, Kieffer v. Weston Land</span> — and more. All invented.</div>
+        </div>
+        <div class="timeline-event catastrophe">
+          <div class="event-date">New Attack Vector</div>
+          <div class="event-title">Chimera Citations</div>
+          <div class="event-detail"><span class="red">ChatGPT spliced real reporter numbers with fake case names.</span> Example: <em>Case v. Fiberboard Corp., 1996 OK 86, 943 P.2d 955</em> — the reporter cites map to two different real cases in different states. A naive "does this reporter citation exist?" check could PASS these.</div>
+        </div>
+        <div class="timeline-event catastrophe">
+          <div class="event-date">The Harder Problem</div>
+          <div class="event-title">14 Real Cases with Fabricated Holdings</div>
+          <div class="event-detail"><span class="red">Wyeth v. Levine (US Supreme Court), Thompson v. Presbyterian Hospital, Howard v. Zimmer, Dodson v. Board of County Commissioners</span> — all real cases that exist and can be found. But <strong>none of them say what the brief claims they say.</strong> The holdings are fabricated.</div>
+        </div>
+        <div class="timeline-event bad">
+          <div class="event-date">4 Attorneys Sanctioned</div>
+          <div class="event-title">Nobody Reviewed the Pleadings</div>
+          <div class="event-detail">Local counsel Buckles admitted he <span class="red">never reviewed the pleadings</span> and entered his appearance "as a favor." Managing partner Oliver had no AI policy. Referring counsel Scott relied on defective pleadings in hearings without reviewing them.</div>
+        </div>
+        <div class="timeline-event catastrophe">
+          <div class="event-date">October 22, 2025</div>
+          <div class="event-title">11 Pleadings Struck, $29,496 in Sanctions</div>
+          <div class="event-detail">$6,000 in fines across 4 attorneys. $23,496 in defense attorney fees. All 11 pleadings struck. 60 days to refile without AI — or <span class="red">claims dismissed without further notice.</span></div>
+        </div>
+        <div class="time-saved bad">"Artificial Intelligence is optional.<br>Actual Intelligence is mandatory."<br>— Judge Jason A. Robertson</div>
+      </div>
+
+      <div class="timeline-column">
+        <div class="timeline-title defended">With Citation Defender</div>
+        <div class="timeline-event neutral">
+          <div class="event-date">2024</div>
+          <div class="event-title">Same Starting Point</div>
+          <div class="event-detail">Same ChatGPT workflow. Same 11 pleadings being drafted. Same citations generated.</div>
+        </div>
+        <div class="timeline-event good">
+          <div class="event-date">Level 1 — Existence</div>
+          <div class="event-title">14 Fabricated Citations Caught</div>
+          <div class="event-detail"><span class="red">&#10007; Williams v. Borden — NOT FOUND</span><br>
+            <span class="red">&#10007; Brown v. Crown Equipment — NOT FOUND</span><br>
+            <span class="red">&#10007; Creech v. Melton — NOT FOUND</span><br>
+            <span class="green">All 14 fabricated citations flagged and removed.</span></div>
+        </div>
+        <div class="timeline-event warn">
+          <div class="event-date">Level 1.5 — Chimera Detection</div>
+          <div class="event-title">Spliced Citations Caught</div>
+          <div class="event-detail"><span class="yellow">Case v. Fiberboard Corp., 1996 OK 86, 943 P.2d 955</span> — reporter numbers resolve to two different cases in different states. <strong>Case name doesn't match either.</strong> A simple existence check might pass this. Citation Defender cross-references case name against reporter citation.</div>
+        </div>
+        <div class="timeline-event good">
+          <div class="event-date">Level 2 — Argument Fit</div>
+          <div class="event-title">14 Real Cases with Fake Holdings Caught</div>
+          <div class="event-detail"><span class="yellow">⚠ Wyeth v. Levine (2009)</span> — case exists, but <strong>does not contain the law quoted.</strong><br>
+            <span class="yellow">⚠ Thompson v. Presbyterian Hospital</span> — real case, <strong>fabricated holding.</strong><br>
+            <span class="yellow">⚠ Howard v. Zimmer</span> — real case, <strong>fabricated holding.</strong><br>
+            <span class="green">Level 2 checks whether the cited source actually says what your brief claims.</span> All 14 misquoted cases flagged.</div>
+        </div>
+        <div class="timeline-event good">
+          <div class="event-date">Before First Filing</div>
+          <div class="event-title">All 28+ Violations Caught</div>
+          <div class="event-detail"><span class="green">Attorney replaces all citations with verified authority. 11 clean pleadings filed. Case proceeds on the merits.</span></div>
+        </div>
+        <div class="time-saved good">28+ violations caught across 11 pleadings.<br>$29,496 saved. Four careers protected.<br>Three levels of defense. One tool.</div>
+      </div>
+    </div>
+
+    <div style="text-align:center; padding: 16px; background: var(--bg-raised); border: 1px solid var(--border); border-radius: 6px; margin-bottom: 24px;">
+      <div style="font-family:var(--mono); font-size: 13px; color: var(--text-bright); font-weight: 600; margin-bottom: 8px;">Why Mattox Is the Worst Case</div>
+      <div style="font-size: 15px; color: var(--text);">Not just hallucinations — <span style="color:var(--amber); font-weight:600;">chimera citations</span> that splice real numbers with fake names, and <span style="color:var(--amber); font-weight:600;">real cases with fabricated holdings</span> that pass existence checks.<br>This is why Level 1 is not enough. This is why Level 2 matters.</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
   <!-- CLOSING (always visible)                -->
   <!-- ═══════════════════════════════════════ -->
   <div class="closing">
@@ -477,19 +571,19 @@
     </blockquote>
     <div class="levels">
       <div class="level-card" style="border-color: rgba(233,69,96,0.4);">
-        <div style="font-family:var(--mono); font-size: 18px; font-weight: 700; color: var(--red);">Level 1: Existence</div>
-        <div style="font-size: 18px; color: var(--text-dim); margin-top: 4px;">Catches the fakes</div>
-        <div style="font-family:var(--mono); font-size: 14px; color: var(--text-dim); margin-top: 4px;">Others do this</div>
+        <div style="font-family:var(--mono); font-size: 13px; font-weight: 700; color: var(--red);">Level 1: Existence</div>
+        <div style="font-size: 13px; color: var(--text-dim); margin-top: 4px;">Catches the fakes</div>
+        <div style="font-family:var(--mono); font-size: 11px; color: var(--text-dim); margin-top: 4px;">Others do this</div>
       </div>
       <div class="level-card" style="border-color: rgba(96,165,250,0.4);">
-        <div style="font-family:var(--mono); font-size: 18px; font-weight: 700; color: var(--blue);">Level 2: Argument Fit</div>
-        <div style="font-size: 18px; color: var(--text-dim); margin-top: 4px;">Catches fabricated quotes</div>
-        <div style="font-family:var(--mono); font-size: 14px; color: var(--gold); margin-top: 4px;">Citation Defender</div>
+        <div style="font-family:var(--mono); font-size: 13px; font-weight: 700; color: var(--blue);">Level 2: Argument Fit</div>
+        <div style="font-size: 13px; color: var(--text-dim); margin-top: 4px;">Catches fabricated quotes</div>
+        <div style="font-family:var(--mono); font-size: 11px; color: var(--gold); margin-top: 4px;">Citation Defender</div>
       </div>
       <div class="level-card" style="border-color: rgba(251,191,36,0.4);">
-        <div style="font-family:var(--mono); font-size: 18px; font-weight: 700; color: var(--yellow);">Level 3: Adversarial Risk</div>
-        <div style="font-size: 18px; color: var(--text-dim); margin-top: 4px;">Catches the dangerous real ones</div>
-        <div style="font-family:var(--mono); font-size: 14px; color: var(--gold); margin-top: 4px;">Only Citation Defender</div>
+        <div style="font-family:var(--mono); font-size: 13px; font-weight: 700; color: var(--yellow);">Level 3: Adversarial Risk</div>
+        <div style="font-size: 13px; color: var(--text-dim); margin-top: 4px;">Catches the dangerous real ones</div>
+        <div style="font-family:var(--mono); font-size: 11px; color: var(--gold); margin-top: 4px;">Only Citation Defender</div>
       </div>
     </div>
     <div class="note">Patent Pending</div>
